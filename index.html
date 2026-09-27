@@ -82,6 +82,7 @@
   .pfp-corner{
     width:32px; height:32px; border-radius:50%;
     background:linear-gradient(150deg, var(--bg-elev), var(--bg-3));
+    background-size:cover; background-position:center;
     border:1.5px solid var(--gold-line); cursor:pointer;
     display:flex; align-items:center; justify-content:center;
     font-family:var(--font-d); font-size:12px; color:var(--text-0);
@@ -190,6 +191,7 @@
     border-radius:50%; display:flex; align-items:center; justify-content:center;
     font-family:var(--font-d); color:var(--text-0);
     background:linear-gradient(150deg, var(--bg-elev), var(--bg-3));
+    background-size:cover; background-position:center;
     border:1px solid var(--gold-line); flex-shrink:0;
   }
 
@@ -440,8 +442,9 @@
         <div class="panel reveal">
           <div class="cat">Add a photo</div>
           <div style="display:flex; align-items:center; gap:14px;">
-            <div class="avatar" style="width:50px;height:50px;font-size:18px;">＋</div>
-            <p style="font-size:12px; color:var(--text-1); margin:0;">A real photo — this isn't a résumé.</p>
+            <label for="avatar-upload" class="avatar" id="ob-avatar-preview" style="width:50px;height:50px;font-size:18px;cursor:pointer;background-size:cover;background-position:center;">＋</label>
+            <input type="file" id="avatar-upload" accept="image/*" style="display:none;">
+            <p style="font-size:12px; color:var(--text-1); margin:0;" id="avatar-status">A real photo — this isn't a résumé.</p>
           </div>
         </div>
 
@@ -794,6 +797,9 @@
     document.querySelector('.tab[data-t="'+landing+'"]').classList.add('active');
     screens.forEach(s=> s.classList.toggle('active', s.id===landing));
     tag.textContent = tagNames[landing];
+    syncPickerFromProfile('ob-interests-cats', myProfile && myProfile.obsessions, 'cnt-ob-int', 20);
+    syncPickerFromProfile('ob-goals-cats', myProfile && myProfile.endgame, 'cnt-ob-goals', 20);
+    syncPickerFromProfile('ob-traits-cats', myProfile && myProfile.vibe, 'cnt-ob-trait', 20);
     if(typeof loadDiscoverFeed === 'function') loadDiscoverFeed();
     if(typeof loadRequests === 'function') loadRequests();
     if(typeof loadDiscipline === 'function') loadDiscipline();
@@ -801,10 +807,50 @@
     if(typeof renderMyProfile === 'function') renderMyProfile();
   }
 
+  // Reflect what's actually saved in the database onto the picker chips —
+  // without this, returning to Lock In always looked empty, and hitting
+  // Done/Lock It In again would silently overwrite real saved data with nothing.
+  function syncPickerFromProfile(containerId, savedItems, countId, max){
+    const container = document.getElementById(containerId);
+    if(!container) return;
+    const items = savedItems || [];
+    const matched = new Set();
+    container.querySelectorAll('.chip.pick').forEach(c=>{
+      const txt = (c.dataset.txt || c.textContent.trim()).toLowerCase();
+      if(items.some(s=> s.toLowerCase()===txt)){ c.classList.add('on'); matched.add(txt); }
+      else { c.classList.remove('on'); }
+    });
+    const unmatched = items.filter(s=> !matched.has(s.toLowerCase()));
+    if(unmatched.length){
+      let customPanel = container.querySelector('.custom-added');
+      if(!customPanel){
+        container.insertAdjacentHTML('beforeend', `<div class="panel reveal pk-cat custom-added"><div class="cat">Custom</div><div class="chipset"></div></div>`);
+        customPanel = container.querySelector('.custom-added');
+        if(typeof mountReveals==='function') mountReveals();
+      }
+      const chipset = customPanel.querySelector('.chipset');
+      unmatched.forEach(s=>{
+        const chip = document.createElement('span');
+        chip.className = 'chip pick on'; chip.dataset.txt = s.toLowerCase(); chip.dataset.wired = '1'; chip.textContent = s;
+        chip.addEventListener('click', ()=>{
+          const now = container.querySelectorAll('.chip.on').length;
+          if(!chip.classList.contains('on') && now>=max) return;
+          chip.classList.toggle('on');
+          const ce=document.getElementById(countId); if(ce) ce.textContent = `(${container.querySelectorAll('.chip.on').length}/${max})`;
+        });
+        chipset.appendChild(chip);
+      });
+    }
+    const countEl = document.getElementById(countId);
+    if(countEl) countEl.textContent = `(${container.querySelectorAll('.chip.on').length}/${max})`;
+  }
+
   async function renderMyProfile(){
     if(!myProfile) return;
     const initials = (myProfile.name||'??').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
-    document.getElementById('mc-avatar').textContent = initials;
+    applyAvatar(document.getElementById('mc-avatar'), myProfile.avatar_url, initials);
+    applyAvatar(document.getElementById('pfp-corner'), myProfile.avatar_url, initials);
+    applyAvatar(document.getElementById('ob-avatar-preview'), myProfile.avatar_url, '＋');
     document.getElementById('mc-name').textContent = myProfile.name + (myProfile.age ? `, ${myProfile.age}` : '');
     document.getElementById('mc-meta').textContent = myProfile.location || 'Location not set';
     document.getElementById('mc-bio').textContent = myProfile.bio || 'Add a bio — coming soon.';
@@ -822,6 +868,35 @@
       '<p class="empty">Nothing set yet — add some in Lock In.</p>';
     mountReveals();
   }
+
+  function applyAvatar(el, url, fallbackText){
+    if(!el) return;
+    if(url){
+      el.style.backgroundImage = `url(${url})`;
+      el.textContent = '';
+    } else {
+      el.style.backgroundImage = 'none';
+      el.textContent = fallbackText;
+    }
+  }
+
+  document.getElementById('avatar-upload').addEventListener('change', async (e)=>{
+    const file = e.target.files[0];
+    if(!file || !myProfile) return;
+    const statusEl = document.getElementById('avatar-status');
+    statusEl.textContent = 'Uploading…';
+    const path = `${myProfile.id}/${Date.now()}_${file.name}`;
+    const { error: upErr } = await sb.storage.from('avatars').upload(path, file, { upsert:true });
+    if(upErr){ statusEl.textContent = 'Upload failed — try a smaller image.'; console.error(upErr); return; }
+    const { data: pub } = sb.storage.from('avatars').getPublicUrl(path);
+    const { error: dbErr } = await sb.from('profiles').update({ avatar_url: pub.publicUrl }).eq('id', myProfile.id);
+    if(dbErr){ statusEl.textContent = 'Saved the photo, but couldn\'t attach it to your profile.'; console.error(dbErr); return; }
+    myProfile.avatar_url = pub.publicUrl;
+    applyAvatar(document.getElementById('ob-avatar-preview'), pub.publicUrl, '＋');
+    applyAvatar(document.getElementById('mc-avatar'), pub.publicUrl, '');
+    applyAvatar(document.getElementById('pfp-corner'), pub.publicUrl, '');
+    statusEl.textContent = 'Photo saved.';
+  });
 
   document.getElementById('sign-out').addEventListener('click', async ()=>{
     await sb.auth.signOut();
@@ -1099,6 +1174,7 @@
         loc: row.location || 'Location not set', aura: row.aura || 0,
         vibeLine: (row.vibe||[]).slice(0,3).join(' · ') || 'No vibe set yet',
         obsessions: row.obsessions||[], endgame: row.endgame||[], vibe: row.vibe||[],
+        avatar_url: row.avatar_url || null,
         common
       };
     }).sort((a,b)=> totalCommon(b) - totalCommon(a));
@@ -1136,8 +1212,8 @@
       card.className = 'p-card reveal';
       const total = totalCommon(p);
       card.innerHTML = `
-        <div class="p-photo">
-          <span class="initials">${p.i}</span>
+        <div class="p-photo" ${p.avatar_url ? `style="background-image:url(${p.avatar_url});background-size:cover;background-position:center;"` : ''}>
+          ${p.avatar_url ? '' : `<span class="initials">${p.i}</span>`}
           <button class="chip tone-gold match-tag" style="cursor:pointer;">${total} In Common</button>
           <button class="icon-btn card-menu" title="Report or block">⋯</button>
           <div class="scroll-hint">Next ⌄</div>
