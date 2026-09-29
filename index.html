@@ -208,6 +208,7 @@
   .filters{ display:flex; gap:7px; overflow-x:auto; margin-bottom:16px; scrollbar-width:none; }
   .filters::-webkit-scrollbar{ display:none; }
   .filters .chip{ flex-shrink:0; cursor:pointer; }
+  .sort-label{ flex-shrink:0; align-self:center; font-size:10.5px; letter-spacing:1.2px; text-transform:uppercase; color:var(--text-2); margin-right:2px; }
   .filters .chip.on{ background:var(--gold-soft); border-color:var(--gold-line); color:var(--gold); }
 
   .p-card{
@@ -255,6 +256,7 @@
   .p-info{ flex-shrink:0; }
   .p-card-top{ display:flex; align-items:flex-end; justify-content:space-between; }
   .p-name{ font-weight:700; font-size:19px; font-family:var(--font-d); }
+  .p-bio{ font-size:12.5px; color:var(--text-1); margin-top:6px; font-style:italic; }
   .p-meta{ font-size:12.5px; color:var(--text-2); margin-top:2px; }
   .p-vibe{ font-size:12.5px; color:var(--text-1); margin:12px 0 14px; padding-top:12px; border-top:1px solid var(--hair); }
   .p-vibe b{ color:var(--gold); font-weight:600; }
@@ -478,6 +480,14 @@
           </div>
         </div>
 
+        <div class="panel reveal">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+            <div class="cat" style="margin:0;">My Bio</div>
+            <span class="count" id="cnt-bio">(0/50)</span>
+          </div>
+          <input class="field" id="bio-input" type="text" maxlength="50" placeholder="One line about you — up to 50 characters">
+        </div>
+
         <button class="btn btn-gold btn-block" id="finish-ob" style="margin-top:8px;">Lock In</button>
       </section>
 
@@ -528,13 +538,14 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
             </button>
           </div>
-          <div class="filters">
-            <div class="chip on">All</div>
-            <div class="chip">Career</div>
-            <div class="chip">Fitness</div>
-            <div class="chip">Craft</div>
-            <div class="chip">Wealth</div>
-            <div class="chip">Mind</div>
+          <div class="filters" id="sort-row">
+            <span class="sort-label">Sort by</span>
+            <div class="chip on" data-sort="ride">Ride or die</div>
+            <div class="chip" data-sort="obs">Same obsessions</div>
+            <div class="chip" data-sort="end">Same endgame</div>
+            <div class="chip" data-sort="vibe">Same vibe</div>
+            <div class="chip" data-sort="aura">Highest aura</div>
+            <div class="chip" data-sort="new">Just dropped</div>
           </div>
           <div style="font-size:11px; color:var(--text-2);" id="active-filter-summary"></div>
         </div>
@@ -557,48 +568,16 @@
         <h1 class="hero" style="font-size:22px;">Stack as many filters as you want</h1>
         <p class="lede">The more you add, the more exact your matches.</p>
 
-        <div class="panel reveal"><div class="cat">Interests &amp; Goals <span class="count" id="cnt-f-int">(0/20)</span></div>
+        <div class="reveal" style="margin-bottom:6px;">
+          <p class="eyebrow">Obsessions &amp; Endgame <span class="count" id="cnt-f-int">(0/20)</span></p>
           <input class="field" id="f-interests-search" placeholder="Search…" style="margin-bottom:10px;">
-          <div class="chipset" id="f-interests">
-            <span class="chip pick">Career &amp; Hustle</span>
-            <span class="chip pick">Fitness &amp; Body</span>
-            <span class="chip pick">Mind &amp; Learning</span>
-            <span class="chip pick">Money &amp; Wealth</span>
-            <span class="chip pick">Adventure &amp; Travel</span>
-            <span class="chip pick">Creative Craft</span>
-          </div>
+          <div id="f-interests"></div>
         </div>
 
-        <div class="panel reveal"><div class="cat">Aura / Personality <span class="count" id="cnt-f-trait">(0/20)</span></div>
+        <div class="reveal" style="margin-bottom:14px;">
+          <p class="eyebrow">Vibe <span class="count" id="cnt-f-trait">(0/20)</span></p>
           <input class="field" id="f-traits-search" placeholder="Search…" style="margin-bottom:10px;">
-          <div class="chipset" id="f-traits">
-            <span class="chip pick">Funny</span>
-            <span class="chip pick">Introvert</span>
-            <span class="chip pick">Extrovert</span>
-            <span class="chip pick">Early riser</span>
-            <span class="chip pick">Night owl</span>
-            <span class="chip pick">Annoyed by calls</span>
-            <span class="chip pick">Planner</span>
-            <span class="chip pick">Spontaneous</span>
-          </div>
-        </div>
-
-        <div class="panel reveal"><div class="cat">Distance</div>
-          <div class="chipset" id="f-distance">
-            <span class="chip pick">&lt; 2 km</span>
-            <span class="chip pick">&lt; 5 km</span>
-            <span class="chip pick">&lt; 10 km</span>
-            <span class="chip pick">Any distance</span>
-          </div>
-        </div>
-
-        <div class="panel reveal"><div class="cat">Age range</div>
-          <div class="chipset" id="f-age">
-            <span class="chip pick">18–24</span>
-            <span class="chip pick">25–30</span>
-            <span class="chip pick">31–40</span>
-            <span class="chip pick">Any age</span>
-          </div>
+          <div id="f-traits"></div>
         </div>
 
         <div style="display:flex; gap:10px; margin-top:6px;">
@@ -616,7 +595,7 @@
           <h2 id="mc-name">—</h2>
           <div class="meta" id="mc-meta">—</div>
           <div class="aura-badge" style="margin-bottom:10px;" id="mc-aura"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.6L22 9.3l-5 4.9 1.2 7.1L12 17.8l-6.2 3.5L7 14.2 2 9.3l7.1-.7z"/></svg>— Aura</div>
-          <div class="bio" id="mc-bio">Add a bio from onboarding — coming soon.</div>
+          <div class="bio" id="mc-bio">No bio yet — add one in Lock In.</div>
         </div>
 
         <div class="section-h"><h3>The Grind</h3></div>
@@ -800,6 +779,9 @@
     syncPickerFromProfile('ob-interests-cats', myProfile && myProfile.obsessions, 'cnt-ob-int', 20);
     syncPickerFromProfile('ob-goals-cats', myProfile && myProfile.endgame, 'cnt-ob-goals', 20);
     syncPickerFromProfile('ob-traits-cats', myProfile && myProfile.vibe, 'cnt-ob-trait', 20);
+    const bioSaved = (myProfile && myProfile.bio) || '';
+    document.getElementById('bio-input').value = bioSaved;
+    document.getElementById('cnt-bio').textContent = `(${bioSaved.length}/50)`;
     if(typeof loadDiscoverFeed === 'function') loadDiscoverFeed();
     if(typeof loadRequests === 'function') loadRequests();
     if(typeof loadDiscipline === 'function') loadDiscipline();
@@ -853,13 +835,13 @@
     applyAvatar(document.getElementById('ob-avatar-preview'), myProfile.avatar_url, '＋');
     document.getElementById('mc-name').textContent = myProfile.name + (myProfile.age ? `, ${myProfile.age}` : '');
     document.getElementById('mc-meta').textContent = myProfile.location || 'Location not set';
-    document.getElementById('mc-bio').textContent = myProfile.bio || 'Add a bio — coming soon.';
+    document.getElementById('mc-bio').textContent = myProfile.bio || 'No bio yet — add one in Lock In.';
     const { count } = await sb.from('ratings').select('*', { count:'exact', head:true }).eq('ratee_id', myProfile.id);
     document.getElementById('mc-aura').innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.6L22 9.3l-5 4.9 1.2 7.1L12 17.8l-6.2 3.5L7 14.2 2 9.3l7.1-.7z"/></svg>${myProfile.aura||0} Aura · rated by ${count||0} buddies`;
 
     const chipsBlock = (label, items)=> items.length ? `
       <div class="panel reveal"><div class="cat">${label}</div>
-        <div class="chipset">${items.map(i=>`<span class="chip">${i}</span>`).join('')}</div></div>` : '';
+        <div class="chipset">${items.map(i=>`<span class="chip">${esc(i)}</span>`).join('')}</div></div>` : '';
     document.getElementById('mc-grind').innerHTML =
       chipsBlock('Obsessions', myProfile.obsessions||[]) + chipsBlock('Endgame', myProfile.endgame||[]) ||
       '<p class="empty">Nothing set yet — add some in Lock In.</p>';
@@ -869,10 +851,18 @@
     mountReveals();
   }
 
+  function esc(t){ return String(t==null?'':t).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  // only https URLs, with anything that could break out of url("...") percent-encoded
+  function safeUrl(u){
+    if(typeof u!=='string' || !/^https:\/\//i.test(u)) return null;
+    return u.replace(/[()'"<>\s\\]/g, ch=> '%'+ch.charCodeAt(0).toString(16).toUpperCase().padStart(2,'0'));
+  }
+
   function applyAvatar(el, url, fallbackText){
     if(!el) return;
-    if(url){
-      el.style.backgroundImage = `url(${url})`;
+    const u = safeUrl(url);
+    if(u){
+      el.style.backgroundImage = `url("${u}")`;
       el.textContent = '';
     } else {
       el.style.backgroundImage = 'none';
@@ -884,8 +874,10 @@
     const file = e.target.files[0];
     if(!file || !myProfile) return;
     const statusEl = document.getElementById('avatar-status');
+    if(file.size > 5*1024*1024){ statusEl.textContent = 'Pick a photo under 5 MB.'; return; }
     statusEl.textContent = 'Uploading…';
-    const path = `${myProfile.id}/${Date.now()}_${file.name}`;
+    const ext = ((file.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,5)) || 'jpg';
+    const path = `${myProfile.id}/${Date.now()}.${ext}`;
     const { error: upErr } = await sb.storage.from('avatars').upload(path, file, { upsert:true });
     if(upErr){ statusEl.textContent = 'Upload failed — try a smaller image.'; console.error(upErr); return; }
     const { data: pub } = sb.storage.from('avatars').getPublicUrl(path);
@@ -953,8 +945,6 @@
   });
 
   // filter sheet
-  document.querySelectorAll('#f-distance .chip.pick, #f-age .chip.pick').forEach(c=> c.addEventListener('click', ()=> c.classList.toggle('on')));
-
   document.getElementById('open-filters').addEventListener('click', ()=>{
     tabs.forEach(x=>x.classList.remove('active'));
     screens.forEach(s=> s.classList.toggle('active', s.id==='filters-sheet'));
@@ -965,25 +955,23 @@
     document.querySelectorAll('#filters-sheet .chip.pick.on').forEach(c=>c.classList.remove('on'));
     document.getElementById('cnt-f-int').textContent = '(0/20)';
     document.getElementById('cnt-f-trait').textContent = '(0/20)';
+    currentFilter = null;
+    summaryEl.textContent = '';
+    renderFeed();
   });
 
   document.getElementById('apply-filters').addEventListener('click', ()=>{
     const on = sel => [...document.querySelectorAll(sel+' .chip.on')].map(c=>c.textContent.trim().toLowerCase());
-    const cats = on('#f-interests');
-    const traits = on('#f-traits');
-    // Note: Distance/Age have no real backing data yet (no geo or birthdate columns),
-    // so they're not applied — selecting them won't affect results until that data exists.
-    const matchAny = (selected, arr)=> !selected.length || selected.some(s=> (arr||[]).some(x=> x.toLowerCase().includes(s) || s.includes(x.toLowerCase())));
-
-    const filtered = people.filter(p=>{
-      const catOk = matchAny(cats, [...(p.obsessions||[]), ...(p.endgame||[])]);
-      const traitOk = matchAny(traits, p.vibe||[]);
-      return catOk && traitOk;
-    });
-
-    const activeCount = cats.length + traits.length;
-    summaryEl.textContent = activeCount ? `${activeCount} filter${activeCount>1?'s':''} applied` : '';
-    renderFeed(filtered);
+    const wantInterests = on('#f-interests');
+    const wantVibe = on('#f-traits');
+    // "The more you add, the more exact your matches": a person must have ALL of what you picked.
+    const hasAll = (wanted, have)=>{ const h = new Set((have||[]).map(x=>x.toLowerCase())); return wanted.every(w=> h.has(w)); };
+    const active = wantInterests.length + wantVibe.length;
+    currentFilter = active
+      ? (p=> hasAll(wantInterests, [...(p.obsessions||[]), ...(p.endgame||[])]) && hasAll(wantVibe, p.vibe||[]))
+      : null;
+    summaryEl.textContent = active ? `${active} filter${active>1?'s':''} on — must match all` : '';
+    renderFeed();
 
     document.querySelector('.tab[data-t="discover"]').classList.add('active');
     screens.forEach(s=> s.classList.toggle('active', s.id==='discover'));
@@ -1067,6 +1055,8 @@
     });
   }
 
+  buildPicker('f-interests', Object.assign({}, INTEREST_CATEGORIES, GOAL_CATEGORIES));
+  buildPicker('f-traits', TRAIT_CATEGORIES);
   buildPicker('ob-interests-cats', INTEREST_CATEGORIES);
   buildPicker('ob-goals-cats', GOAL_CATEGORIES);
   buildPicker('ob-traits-cats', TRAIT_CATEGORIES);
@@ -1117,12 +1107,23 @@
     const obsessions = pick('ob-interests-cats');
     const endgame = pick('ob-goals-cats');
     const vibe = pick('ob-traits-cats');
+    const bio = document.getElementById('bio-input').value.trim().slice(0, 50);
     if(myProfile){
-      await sb.from('profiles').update({ obsessions, endgame, vibe }).eq('id', myProfile.id);
-      myProfile.obsessions = obsessions; myProfile.endgame = endgame; myProfile.vibe = vibe;
+      const { error } = await sb.from('profiles').update({ obsessions, endgame, vibe, bio }).eq('id', myProfile.id);
+      if(error){
+        console.error(error);
+        btn.disabled = false; btn.textContent = orig;
+        alert('Couldn\'t save your profile — check your connection and try again.');
+        return;
+      }
+      myProfile.obsessions = obsessions; myProfile.endgame = endgame; myProfile.vibe = vibe; myProfile.bio = bio;
     }
     btn.disabled = false; btn.textContent = orig;
     document.querySelector('.tab[data-t="discover"]').click();
+  });
+
+  document.getElementById('bio-input').addEventListener('input', (e)=>{
+    document.getElementById('cnt-bio').textContent = `(${e.target.value.length}/50)`;
   });
 
   // onboarding rows -> full picker sheets
@@ -1155,7 +1156,23 @@
 
   // discover feed — loaded from Supabase, computed against your real profile
   let people = [];
+  let sortMode = 'ride';      // ride | obs | end | vibe | aura | new
+  let currentFilter = null;   // set by Dial It In, survives tab switches
   function totalCommon(p){ return p.common.obsessions.length + p.common.endgame.length + p.common.vibe.length; }
+
+  const SORTERS = {
+    ride: (a,b)=> totalCommon(b) - totalCommon(a),
+    obs:  (a,b)=> b.common.obsessions.length - a.common.obsessions.length,
+    end:  (a,b)=> b.common.endgame.length - a.common.endgame.length,
+    vibe: (a,b)=> b.common.vibe.length - a.common.vibe.length,
+    aura: (a,b)=> b.aura - a.aura,
+    new:  (a,b)=> b.createdAt - a.createdAt
+  };
+  // ties fall back to overall overlap, then aura, so the order is never arbitrary
+  function sortPeople(list){
+    const primary = SORTERS[sortMode] || SORTERS.ride;
+    return [...list].sort((a,b)=> primary(a,b) || totalCommon(b) - totalCommon(a) || b.aura - a.aura);
+  }
 
   async function loadDiscoverFeed(){
     if(!myProfile) return;
@@ -1175,9 +1192,11 @@
         vibeLine: (row.vibe||[]).slice(0,3).join(' · ') || 'No vibe set yet',
         obsessions: row.obsessions||[], endgame: row.endgame||[], vibe: row.vibe||[],
         avatar_url: row.avatar_url || null,
+        bio: row.bio || '',
+        createdAt: Date.parse(row.created_at) || 0,
         common
       };
-    }).sort((a,b)=> totalCommon(b) - totalCommon(a));
+    });
     renderFeed();
   }
 
@@ -1196,24 +1215,30 @@
     document.getElementById('common-body').innerHTML = groups.filter(g=>g[1].length).map(([label, items])=>`
       <div class="panel reveal">
         <div class="cat">${label}</div>
-        <div class="chipset">${items.map(i=>`<span class="chip tone-gold">${i}</span>`).join('')}</div>
+        <div class="chipset">${items.map(i=>`<span class="chip tone-gold">${esc(i)}</span>`).join('')}</div>
       </div>`).join('');
     mountReveals();
     screens.forEach(s=> s.classList.toggle('active', s.id==='common-sheet'));
     document.querySelector('.scroll').scrollTop = 0;
   }
 
-  function renderFeed(filtered){
+  function renderFeed(){
     feed.innerHTML = '';
-    const list = filtered || people;
-    if(!list.length){ feed.innerHTML = '<p class="empty" style="padding:0 22px;">Nobody matches that combo yet — try loosening a filter.</p>'; return; }
+    const list = sortPeople(currentFilter ? people.filter(currentFilter) : people);
+    if(!list.length){
+      feed.innerHTML = people.length
+        ? '<p class="empty" style="padding:0 22px;">Nobody matches all of that yet — try loosening a filter.</p>'
+        : '<p class="empty" style="padding:0 22px;">No one else is here yet — invite your people.</p>';
+      return;
+    }
     list.forEach(p=>{
       const card = document.createElement('div');
       card.className = 'p-card reveal';
       const total = totalCommon(p);
+      const photoUrl = safeUrl(p.avatar_url);
       card.innerHTML = `
-        <div class="p-photo" ${p.avatar_url ? `style="background-image:url(${p.avatar_url});background-size:cover;background-position:center;"` : ''}>
-          ${p.avatar_url ? '' : `<span class="initials">${p.i}</span>`}
+        <div class="p-photo">
+          ${photoUrl ? '' : `<span class="initials">${esc(p.i)}</span>`}
           <button class="chip tone-gold match-tag" style="cursor:pointer;">${total} In Common</button>
           <button class="icon-btn card-menu" title="Report or block">⋯</button>
           <div class="scroll-hint">Next ⌄</div>
@@ -1221,15 +1246,22 @@
         <div class="p-info">
           <div class="p-card-top">
             <div>
-              <div class="p-name">${p.n}</div>
-              <div class="p-meta">${p.loc}</div>
+              <div class="p-name">${esc(p.n)}</div>
+              <div class="p-meta">${esc(p.loc)}</div>
+              ${p.bio ? `<div class="p-bio">${esc(p.bio)}</div>` : ''}
             </div>
             <div class="aura-badge"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.6L22 9.3l-5 4.9 1.2 7.1L12 17.8l-6.2 3.5L7 14.2 2 9.3l7.1-.7z"/></svg>${p.aura} Aura</div>
           </div>
-          <div class="chipset" style="margin-top:10px;">${p.common.obsessions.map(t=>`<span class="chip">${t}</span>`).join('')}</div>
-          <div class="p-vibe"><b>Vibe —</b> ${p.vibeLine}</div>
+          <div class="chipset" style="margin-top:10px;">${p.common.obsessions.map(t=>`<span class="chip">${esc(t)}</span>`).join('')}</div>
+          <div class="p-vibe"><b>Vibe —</b> ${esc(p.vibeLine)}</div>
           <button class="btn btn-gold btn-block send">Send Buddy Request</button>
         </div>`;
+      if(photoUrl){
+        const ph = card.querySelector('.p-photo');
+        ph.style.backgroundImage = `url("${photoUrl}")`;
+        ph.style.backgroundSize = 'cover';
+        ph.style.backgroundPosition = 'center';
+      }
       card.querySelector('.match-tag').addEventListener('click', e=>{
         e.stopPropagation();
         openCommonSheet(p);
@@ -1258,6 +1290,14 @@
     mountReveals();
   }
   renderFeed();
+
+  document.querySelectorAll('#sort-row .chip').forEach(c=> c.addEventListener('click', ()=>{
+    document.querySelectorAll('#sort-row .chip').forEach(x=>x.classList.remove('on'));
+    c.classList.add('on');
+    sortMode = c.dataset.sort;
+    renderFeed();
+    feed.scrollTop = 0;
+  }));
 
   // requests
   let incoming=[], sent=[], connected=[];
@@ -1298,8 +1338,8 @@
   function render(){
     pIn.innerHTML = incoming.length ? incoming.map((p,idx)=>`
       <div class="r-card reveal">
-        <div class="avatar">${p.i}</div>
-        <div><div class="r-name">${p.n}</div><div class="r-sub">${p.sub}</div></div>
+        <div class="avatar">${esc(p.i)}</div>
+        <div><div class="r-name">${esc(p.n)}</div><div class="r-sub">${p.sub}</div></div>
         <div class="r-actions">
           <div class="icon-btn bad" data-dec="${idx}">${ic('x')}</div>
           <div class="icon-btn good" data-acc="${idx}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 12l4 4 8-8"/></svg></div>
@@ -1307,20 +1347,20 @@
       </div>`).join('') : '<p class="empty">No pending requests.</p>';
 
     pSent.innerHTML = sent.length ? sent.map(p=>`
-      <div class="r-card reveal"><div class="avatar">${p.i}</div>
-      <div><div class="r-name">${p.n}</div><div class="r-sub">${p.sub}</div></div>
+      <div class="r-card reveal"><div class="avatar">${esc(p.i)}</div>
+      <div><div class="r-name">${esc(p.n)}</div><div class="r-sub">${p.sub}</div></div>
       <div class="status pending">Pending</div></div>`).join('') : '<p class="empty">No requests sent.</p>';
 
     pConn.innerHTML = connected.length ? connected.map((p,idx)=>`
-      <div class="r-card reveal" style="align-items:flex-start;"><div class="avatar">${p.i}</div>
+      <div class="r-card reveal" style="align-items:flex-start;"><div class="avatar">${esc(p.i)}</div>
       <div style="flex:1;">
-        <div class="r-name">${p.n}</div><div class="r-sub">${p.sub}</div>
+        <div class="r-name">${esc(p.n)}</div><div class="r-sub">${p.sub}</div>
         <div class="aura-badge" style="margin-top:6px;"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.6L22 9.3l-5 4.9 1.2 7.1L12 17.8l-6.2 3.5L7 14.2 2 9.3l7.1-.7z"/></svg>${p.aura} Aura</div>
-        <div class="unlocked">${p.socials.map(s=>`<span class="u-chip">${ic(s.k)} ${s.l}</span>`).join('')}</div>
+        <div class="unlocked">${p.socials.map(s=>`<span class="u-chip">${ic(s.k)} ${esc(s.l)}</span>`).join('')}</div>
         <div class="stars ${p.rated?'rated':''}" data-idx="${idx}" style="margin-top:8px;">
           ${[1,2,3,4,5].map(n=>`<svg data-star="${n}" class="${p.rated && n<=p.givenRating ? 'on':''}" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.6L22 9.3l-5 4.9 1.2 7.1L12 17.8l-6.2 3.5L7 14.2 2 9.3l7.1-.7z"/></svg>`).join('')}
         </div>
-        ${p.rated ? `<div class="rate-note">You rated ${p.n.split(',')[0]} ${p.givenRating}★ · Aura +${p.givenRating*4}</div>` : `<div class="rate-note" style="color:var(--text-2);">Rate this buddy — boosts their Aura publicly</div>`}
+        ${p.rated ? `<div class="rate-note">You rated ${esc(p.n.split(',')[0])} ${p.givenRating}★ · Aura +${p.givenRating*4}</div>` : `<div class="rate-note" style="color:var(--text-2);">Rate this buddy — boosts their Aura publicly</div>`}
       </div>
       <div class="status connected">Buddy</div></div>`).join('') : '<p class="empty">No connections yet.</p>';
 
@@ -1401,7 +1441,7 @@
       return d.toLocaleDateString(undefined,{weekday:'short'});
     };
     document.getElementById('weekly-drop-list').innerHTML = data.map((q,i)=>
-      `<div class="archive-item" style="${i===0?'border-top:none; padding-top:0;':''}"><span class="d">${dayLabel(q.quote_date)}</span><span>"${q.quote_text}"</span></div>`
+      `<div class="archive-item" style="${i===0?'border-top:none; padding-top:0;':''}"><span class="d">${dayLabel(q.quote_date)}</span><span>"${esc(q.quote_text)}"</span></div>`
     ).join('');
   }
 
@@ -1449,13 +1489,13 @@
   function renderDiscipline(){
     soloEl.innerHTML = soloGoals.length ? soloGoals.map(g=>`
       <div class="panel reveal">
-        <div class="goal-title">${g.title}</div>
-        <div class="goal-due">Due ${g.due}</div>
+        <div class="goal-title">${esc(g.title)}</div>
+        <div class="goal-due">Due ${esc(g.due)}</div>
         <div class="progress-track"><div class="progress-fill" style="width:${g.progress}%"></div></div>
         <div class="progress-pct">${g.progress}%</div>
         <div class="stake-row">
-          <div class="stake-chip good"><div class="stake-label">Reward</div><div class="stake-val">${g.reward}</div></div>
-          <div class="stake-chip bad"><div class="stake-label">Stakes</div><div class="stake-val">${g.stakes}</div></div>
+          <div class="stake-chip good"><div class="stake-label">Reward</div><div class="stake-val">${esc(g.reward)}</div></div>
+          <div class="stake-chip bad"><div class="stake-label">Stakes</div><div class="stake-val">${esc(g.stakes)}</div></div>
         </div>
       </div>`).join('') : '<p class="empty">No solo goals yet.</p>';
 
@@ -1463,20 +1503,20 @@
       const avg = Math.round(g.buddies.reduce((s,b)=>s+b.progress,0)/(g.buddies.length||1));
       return `
       <div class="panel reveal">
-        <div class="pact-buddies">${g.buddies.map(b=>`<div class="avatar">${b.i}</div>`).join('')}</div>
-        <div class="goal-title">${g.title}</div>
-        <div class="goal-due">Due ${g.due} · Pact of ${g.buddies.length}</div>
+        <div class="pact-buddies">${g.buddies.map(b=>`<div class="avatar">${esc(b.i)}</div>`).join('')}</div>
+        <div class="goal-title">${esc(g.title)}</div>
+        <div class="goal-due">Due ${esc(g.due)} · Pact of ${g.buddies.length}</div>
         <div class="progress-track"><div class="progress-fill" style="width:${avg}%"></div></div>
         <div class="progress-pct">${avg}% overall</div>
         ${g.buddies.map(b=>`
           <div class="buddy-row">
-            <div class="avatar">${b.i}</div><div class="name">${b.n}</div>
+            <div class="avatar">${esc(b.i)}</div><div class="name">${esc(b.n)}</div>
             <div class="progress-track"><div class="progress-fill" style="width:${b.progress}%"></div></div>
             <div class="pct">${b.progress}%</div>
           </div>`).join('')}
         <div class="stake-row">
-          <div class="stake-chip good"><div class="stake-label">Reward</div><div class="stake-val">${g.reward}</div></div>
-          <div class="stake-chip bad"><div class="stake-label">Stakes</div><div class="stake-val">${g.stakes}</div></div>
+          <div class="stake-chip good"><div class="stake-label">Reward</div><div class="stake-val">${esc(g.reward)}</div></div>
+          <div class="stake-chip bad"><div class="stake-label">Stakes</div><div class="stake-val">${esc(g.stakes)}</div></div>
         </div>
       </div>`;
     }).join('') : '<p class="empty">No pacts yet — start one with a buddy.</p>';
@@ -1503,10 +1543,14 @@
       is_pact: false
     }).select().single();
     if(!error && goalRow){
-      await sb.from('goal_participants').insert({ goal_id: goalRow.id, profile_id: myProfile.id, progress: 0 });
+      const { error: pErr } = await sb.from('goal_participants').insert({ goal_id: goalRow.id, profile_id: myProfile.id, progress: 0 });
+      if(pErr){ console.error(pErr); alert("Couldn't save that goal — try again."); btn.disabled = false; return; }
       ['s-title','s-due','s-reward','s-stakes'].forEach(id=> document.getElementById(id).value='');
       document.getElementById('solo-form').classList.remove('open');
       await loadDiscipline();
+    } else {
+      console.error(error);
+      alert("Couldn't save that goal — try again.");
     }
     btn.disabled = false;
   });
@@ -1514,7 +1558,7 @@
   // buddy picker for pact (reuses your real connected buddies)
   function refreshPactBuddyPicker(){
     document.getElementById('p-buddies').innerHTML = connected.map(b=>
-      `<span class="chip pick" data-id="${b.id}" data-i="${b.i}" data-n="${b.n.split(',')[0]}">${b.n.split(',')[0]}</span>`).join('') || '<span style="font-size:11.5px;color:var(--text-2);">No buddies yet — connect first.</span>';
+      `<span class="chip pick" data-id="${esc(b.id)}" data-i="${esc(b.i)}" data-n="${esc(b.n.split(',')[0])}">${esc(b.n.split(',')[0])}</span>`).join('') || '<span style="font-size:11.5px;color:var(--text-2);">No buddies yet — connect first.</span>';
     document.querySelectorAll('#p-buddies .chip.pick').forEach(c=> c.addEventListener('click', ()=> c.classList.toggle('on')));
   }
   document.getElementById('add-pact-btn').addEventListener('click', ()=>{
@@ -1538,10 +1582,14 @@
         { goal_id: goalRow.id, profile_id: myProfile.id, progress: 0 },
         ...picked.map(c=> ({ goal_id: goalRow.id, profile_id: c.dataset.id, progress: 0 }))
       ];
-      await sb.from('goal_participants').insert(participantRows);
+      const { error: pErr } = await sb.from('goal_participants').insert(participantRows);
+      if(pErr){ console.error(pErr); alert("Couldn't add everyone to the pact — try again."); btn.disabled = false; return; }
       ['p-title','p-due','p-reward','p-stakes'].forEach(id=> document.getElementById(id).value='');
       document.getElementById('pact-form').classList.remove('open');
       await loadDiscipline();
+    } else {
+      console.error(error);
+      alert("Couldn't start that pact — try again.");
     }
     btn.disabled = false;
   });
