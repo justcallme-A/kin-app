@@ -1423,25 +1423,27 @@
   });
 
   async function loadDailyQuote(){
+    const now = new Date();
+    const startOfYear = new Date(now.getFullYear(), 0, 1);
+    const todayDoy = Math.floor((now - startOfYear) / 86400000) + 1; // 1-365(6)
+    const todayDoyWrapped = ((todayDoy - 1) % 365) + 1; // guard leap-year day 366
+
+    // last 7 day-of-year slots, wrapping around the year boundary (e.g. day 2 → [361..365,1,2])
+    const wantedDoys = Array.from({length:7}, (_, i)=> ((todayDoyWrapped - 1 - i + 365) % 365) + 1);
+
     const { data, error } = await sb
       .from('daily_quotes')
       .select('*')
-      .order('quote_date', { ascending: false })
-      .limit(7);
+      .in('day_of_year', wantedDoys);
     if(error || !data || !data.length) return;
-    const todayStr = new Date().toISOString().slice(0,10);
-    const today = data.find(q=> q.quote_date === todayStr) || data[0];
-    document.getElementById('f-quote-text').textContent = `"${today.quote_text}"`;
 
-    const dayLabel = (dateStr)=>{
-      const d = new Date(dateStr+'T00:00:00');
-      const diffDays = Math.round((new Date(todayStr+'T00:00:00') - d) / 86400000);
-      if(diffDays===0) return 'Today';
-      if(diffDays===1) return 'Yesterday';
-      return d.toLocaleDateString(undefined,{weekday:'short'});
-    };
-    document.getElementById('weekly-drop-list').innerHTML = data.map((q,i)=>
-      `<div class="archive-item" style="${i===0?'border-top:none; padding-top:0;':''}"><span class="d">${dayLabel(q.quote_date)}</span><span>"${esc(q.quote_text)}"</span></div>`
+    const byDoy = Object.fromEntries(data.map(q=> [q.day_of_year, q.quote_text]));
+    const today = byDoy[todayDoyWrapped];
+    if(today) document.getElementById('f-quote-text').textContent = `"${today}"`;
+
+    const dayLabel = (i)=> i===0 ? 'Today' : i===1 ? 'Yesterday' : new Date(now - i*86400000).toLocaleDateString(undefined,{weekday:'short'});
+    document.getElementById('weekly-drop-list').innerHTML = wantedDoys.map((doy,i)=>
+      byDoy[doy] ? `<div class="archive-item" style="${i===0?'border-top:none; padding-top:0;':''}"><span class="d">${dayLabel(i)}</span><span>"${esc(byDoy[doy])}"</span></div>` : ''
     ).join('');
   }
 
