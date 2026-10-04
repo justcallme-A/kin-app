@@ -205,7 +205,7 @@
   }
 
   /* ---------- discover ---------- */
-  .filters{ display:flex; gap:7px; overflow-x:auto; margin-bottom:16px; scrollbar-width:none; }
+  .filters{ display:flex; gap:7px; overflow-x:auto; margin-bottom:16px; scrollbar-width:none; touch-action:pan-x; -webkit-overflow-scrolling:touch; overscroll-behavior-x:contain; }
   .filters::-webkit-scrollbar{ display:none; }
   .filters .chip{ flex-shrink:0; cursor:pointer; }
   .sort-label{ flex-shrink:0; align-self:center; font-size:10.5px; letter-spacing:1.2px; text-transform:uppercase; color:var(--text-2); margin-right:2px; }
@@ -447,6 +447,22 @@
             <label for="avatar-upload" class="avatar" id="ob-avatar-preview" style="width:50px;height:50px;font-size:18px;cursor:pointer;background-size:cover;background-position:center;">＋</label>
             <input type="file" id="avatar-upload" accept="image/*" style="display:none;">
             <p style="font-size:12px; color:var(--text-1); margin:0;" id="avatar-status">A real photo — this isn't a résumé.</p>
+          </div>
+        </div>
+
+        <div class="panel reveal">
+          <div class="cat">Your Name</div>
+          <input class="field" id="name-input" type="text" maxlength="40" placeholder="What should people call you?">
+        </div>
+
+        <div style="display:flex; gap:12px;">
+          <div class="panel reveal" style="flex:1;">
+            <div class="cat">Age</div>
+            <input class="field" id="age-input" type="number" min="18" max="120" placeholder="25">
+          </div>
+          <div class="panel reveal" style="flex:2;">
+            <div class="cat">Location</div>
+            <input class="field" id="location-input" type="text" maxlength="60" placeholder="City">
           </div>
         </div>
 
@@ -782,6 +798,9 @@
     const bioSaved = (myProfile && myProfile.bio) || '';
     document.getElementById('bio-input').value = bioSaved;
     document.getElementById('cnt-bio').textContent = `(${bioSaved.length}/50)`;
+    document.getElementById('name-input').value = (myProfile && myProfile.name) || '';
+    document.getElementById('age-input').value = (myProfile && myProfile.age) || '';
+    document.getElementById('location-input').value = (myProfile && myProfile.location) || '';
     if(typeof loadDiscoverFeed === 'function') loadDiscoverFeed();
     if(typeof loadRequests === 'function') loadRequests();
     if(typeof loadDiscipline === 'function') loadDiscipline();
@@ -1108,8 +1127,12 @@
     const endgame = pick('ob-goals-cats');
     const vibe = pick('ob-traits-cats');
     const bio = document.getElementById('bio-input').value.trim().slice(0, 50);
+    const name = document.getElementById('name-input').value.trim().slice(0, 40) || 'New Kin';
+    const ageRaw = document.getElementById('age-input').value;
+    const age = ageRaw ? Math.max(18, Math.min(120, parseInt(ageRaw, 10))) : null;
+    const location = document.getElementById('location-input').value.trim().slice(0, 60);
     if(myProfile){
-      const { error } = await sb.from('profiles').update({ obsessions, endgame, vibe, bio }).eq('id', myProfile.id);
+      const { error } = await sb.from('profiles').update({ obsessions, endgame, vibe, bio, name, age, location }).eq('id', myProfile.id);
       if(error){
         console.error(error);
         btn.disabled = false; btn.textContent = orig;
@@ -1117,6 +1140,8 @@
         return;
       }
       myProfile.obsessions = obsessions; myProfile.endgame = endgame; myProfile.vibe = vibe; myProfile.bio = bio;
+      myProfile.name = name; myProfile.age = age; myProfile.location = location;
+      if(typeof renderMyProfile === 'function') renderMyProfile();
     }
     btn.disabled = false; btn.textContent = orig;
     document.querySelector('.tab[data-t="discover"]').click();
