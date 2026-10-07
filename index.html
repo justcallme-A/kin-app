@@ -204,6 +204,20 @@
     padding:12px 14px; color:var(--text-0); font-family:var(--font-b); font-size:13px; margin-top:4px;
   }
 
+  /* ---------- location ---------- */
+  .loc-selected{ display:flex; align-items:center; justify-content:space-between; gap:10px; background:var(--gold-soft); border:1px solid var(--gold-line); color:var(--gold); border-radius:var(--r-m); padding:11px 14px; font-size:13px; margin-top:4px; }
+  .loc-x{ background:none; border:0; color:var(--text-1); font:inherit; font-size:12px; text-decoration:underline; cursor:pointer; padding:2px 4px; }
+  #loc-results{ display:flex; flex-direction:column; margin-top:6px; }
+  .loc-opt{ text-align:left; background:var(--bg-2); border:1px solid var(--hair); border-radius:var(--r-s); color:var(--text-0); font:inherit; font-size:13px; padding:11px 13px; margin-top:5px; cursor:pointer; }
+  .loc-opt small{ display:block; color:var(--text-2); font-size:11px; margin-top:2px; }
+  .loc-opt:active{ border-color:var(--gold-line); }
+  .loc-hide{ display:flex; align-items:center; gap:10px; margin-top:14px; font-size:13px; color:var(--text-0); cursor:pointer; }
+  .loc-hide input{ width:18px; height:18px; accent-color:var(--gold); flex-shrink:0; }
+  .loc-note{ font-size:11.5px; color:var(--text-2); margin:8px 0 0; line-height:1.5; }
+  .dchip{ cursor:pointer; }
+  .dchip.on{ background:var(--gold-soft); border-color:var(--gold-line); color:var(--gold); }
+  #loc-nudge{ display:none; font-size:11.5px; color:var(--gold); margin:0 0 8px; cursor:pointer; text-decoration:underline; text-decoration-color:var(--gold-line); }
+
   /* ---------- discover ---------- */
   .filters{ display:flex; gap:7px; overflow-x:auto; margin-bottom:16px; scrollbar-width:none; touch-action:pan-x; -webkit-overflow-scrolling:touch; overscroll-behavior-x:contain; }
   .filters::-webkit-scrollbar{ display:none; }
@@ -455,15 +469,22 @@
           <input class="field" id="name-input" type="text" maxlength="40" placeholder="What should people call you?">
         </div>
 
-        <div style="display:flex; gap:12px;">
-          <div class="panel reveal" style="flex:1;">
-            <div class="cat">Age</div>
-            <input class="field" id="age-input" type="number" min="18" max="120" placeholder="25">
+        <div class="panel reveal">
+          <div class="cat">Age</div>
+          <input class="field" id="age-input" type="number" min="18" max="120" placeholder="25">
+        </div>
+
+        <div class="panel reveal" id="loc-panel">
+          <div class="cat">Location</div>
+          <div class="loc-selected" id="loc-selected" style="display:none;"><span id="loc-selected-label"></span><button type="button" class="loc-x" id="loc-change">Change</button></div>
+          <div id="loc-search-wrap">
+            <input class="field" id="loc-search" type="text" maxlength="60" placeholder="Search any city in the world" autocomplete="off" autocapitalize="words">
+            <div id="loc-results"></div>
+            <button type="button" class="btn btn-ghost btn-block" id="loc-gps" style="margin-top:10px;">Use my current location</button>
+            <p class="loc-note" id="loc-status" style="display:none;"></p>
           </div>
-          <div class="panel reveal" style="flex:2;">
-            <div class="cat">Location</div>
-            <input class="field" id="location-input" type="text" maxlength="60" placeholder="City">
-          </div>
+          <label class="loc-hide"><input type="checkbox" id="loc-hide"><span>Don't share my location</span></label>
+          <p class="loc-note" id="loc-note"></p>
         </div>
 
         <div class="panel reveal link-row" id="row-interests">
@@ -557,12 +578,14 @@
           <div class="filters" id="sort-row">
             <span class="sort-label">Sort by</span>
             <div class="chip on" data-sort="ride">Ride or die</div>
+            <div class="chip" data-sort="near">Closest</div>
             <div class="chip" data-sort="obs">Same obsessions</div>
             <div class="chip" data-sort="end">Same endgame</div>
             <div class="chip" data-sort="vibe">Same vibe</div>
             <div class="chip" data-sort="aura">Highest aura</div>
             <div class="chip" data-sort="new">Just dropped</div>
           </div>
+          <div id="loc-nudge">Add your city in Lock In to see how far people are ›</div>
           <div style="font-size:11px; color:var(--text-2);" id="active-filter-summary"></div>
         </div>
         <div id="feed"></div>
@@ -594,6 +617,26 @@
           <p class="eyebrow">Vibe <span class="count" id="cnt-f-trait">(0/20)</span></p>
           <input class="field" id="f-traits-search" placeholder="Search…" style="margin-bottom:10px;">
           <div id="f-traits"></div>
+        </div>
+
+        <div class="reveal" style="margin-bottom:14px;">
+          <p class="eyebrow">Distance</p>
+          <div class="chipset" id="f-dist">
+            <span class="chip dchip on" data-km="">Anywhere</span>
+            <span class="chip dchip" data-km="25">My city</span>
+            <span class="chip dchip" data-km="100">100 km</span>
+            <span class="chip dchip" data-km="500">500 km</span>
+            <span class="chip dchip" data-km="2000">2000 km</span>
+          </div>
+          <p class="loc-note" id="f-dist-note"></p>
+        </div>
+
+        <div class="reveal" style="margin-bottom:14px;">
+          <p class="eyebrow">Age</p>
+          <div style="display:flex; gap:10px;">
+            <input class="field" id="f-age-min" type="number" min="18" max="120" placeholder="From" style="margin-top:0;">
+            <input class="field" id="f-age-max" type="number" min="18" max="120" placeholder="To" style="margin-top:0;">
+          </div>
         </div>
 
         <div style="display:flex; gap:10px; margin-top:6px;">
@@ -800,7 +843,7 @@
     document.getElementById('cnt-bio').textContent = `(${bioSaved.length}/50)`;
     document.getElementById('name-input').value = (myProfile && myProfile.name) || '';
     document.getElementById('age-input').value = (myProfile && myProfile.age) || '';
-    document.getElementById('location-input').value = (myProfile && myProfile.location) || '';
+    if(typeof loadMyLocation === 'function') loadMyLocation();
     if(typeof loadDiscoverFeed === 'function') loadDiscoverFeed();
     if(typeof loadRequests === 'function') loadRequests();
     if(typeof loadDiscipline === 'function') loadDiscipline();
@@ -853,7 +896,7 @@
     applyAvatar(document.getElementById('pfp-corner'), myProfile.avatar_url, initials);
     applyAvatar(document.getElementById('ob-avatar-preview'), myProfile.avatar_url, '＋');
     document.getElementById('mc-name').textContent = myProfile.name + (myProfile.age ? `, ${myProfile.age}` : '');
-    document.getElementById('mc-meta').textContent = myProfile.location || 'Location not set';
+    document.getElementById('mc-meta').textContent = (typeof myLoc !== 'undefined' && myLoc && !myLoc.share) ? 'Location hidden' : (myProfile.location || 'Location not set');
     document.getElementById('mc-bio').textContent = myProfile.bio || 'No bio yet — add one in Lock In.';
     const { count } = await sb.from('ratings').select('*', { count:'exact', head:true }).eq('ratee_id', myProfile.id);
     document.getElementById('mc-aura').innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.6L22 9.3l-5 4.9 1.2 7.1L12 17.8l-6.2 3.5L7 14.2 2 9.3l7.1-.7z"/></svg>${myProfile.aura||0} Aura · rated by ${count||0} buddies`;
@@ -974,10 +1017,18 @@
     document.querySelectorAll('#filters-sheet .chip.pick.on').forEach(c=>c.classList.remove('on'));
     document.getElementById('cnt-f-int').textContent = '(0/20)';
     document.getElementById('cnt-f-trait').textContent = '(0/20)';
+    document.querySelectorAll('#f-dist .dchip').forEach(c=> c.classList.toggle('on', c.dataset.km===''));
+    document.getElementById('f-age-min').value = '';
+    document.getElementById('f-age-max').value = '';
     currentFilter = null;
     summaryEl.textContent = '';
     renderFeed();
   });
+
+  document.querySelectorAll('#f-dist .dchip').forEach(c=> c.addEventListener('click', ()=>{
+    document.querySelectorAll('#f-dist .dchip').forEach(x=> x.classList.remove('on'));
+    c.classList.add('on');
+  }));
 
   document.getElementById('apply-filters').addEventListener('click', ()=>{
     const on = sel => [...document.querySelectorAll(sel+' .chip.on')].map(c=>c.textContent.trim().toLowerCase());
@@ -985,9 +1036,16 @@
     const wantVibe = on('#f-traits');
     // "The more you add, the more exact your matches": a person must have ALL of what you picked.
     const hasAll = (wanted, have)=>{ const h = new Set((have||[]).map(x=>x.toLowerCase())); return wanted.every(w=> h.has(w)); };
-    const active = wantInterests.length + wantVibe.length;
+    const kmSel = document.querySelector('#f-dist .dchip.on');
+    const maxKm = kmSel && kmSel.dataset.km ? +kmSel.dataset.km : null;
+    const ageMin = parseInt(document.getElementById('f-age-min').value, 10) || null;
+    const ageMax = parseInt(document.getElementById('f-age-max').value, 10) || null;
+    const active = wantInterests.length + wantVibe.length + (maxKm ? 1 : 0) + (ageMin ? 1 : 0) + (ageMax ? 1 : 0);
     currentFilter = active
-      ? (p=> hasAll(wantInterests, [...(p.obsessions||[]), ...(p.endgame||[])]) && hasAll(wantVibe, p.vibe||[]))
+      ? (p=> hasAll(wantInterests, [...(p.obsessions||[]), ...(p.endgame||[])]) && hasAll(wantVibe, p.vibe||[])
+          && (!maxKm || (p.km != null && p.km <= maxKm))
+          && (!ageMin || (p.ageNum != null && p.ageNum >= ageMin))
+          && (!ageMax || (p.ageNum != null && p.ageNum <= ageMax)))
       : null;
     summaryEl.textContent = active ? `${active} filter${active>1?'s':''} on — must match all` : '';
     renderFeed();
@@ -1130,9 +1188,8 @@
     const name = document.getElementById('name-input').value.trim().slice(0, 40) || 'New Kin';
     const ageRaw = document.getElementById('age-input').value;
     const age = ageRaw ? Math.max(18, Math.min(120, parseInt(ageRaw, 10))) : null;
-    const location = document.getElementById('location-input').value.trim().slice(0, 60);
     if(myProfile){
-      const { error } = await sb.from('profiles').update({ obsessions, endgame, vibe, bio, name, age, location }).eq('id', myProfile.id);
+      const { error } = await sb.from('profiles').update({ obsessions, endgame, vibe, bio, name, age }).eq('id', myProfile.id);
       if(error){
         console.error(error);
         btn.disabled = false; btn.textContent = orig;
@@ -1140,7 +1197,13 @@
         return;
       }
       myProfile.obsessions = obsessions; myProfile.endgame = endgame; myProfile.vibe = vibe; myProfile.bio = bio;
-      myProfile.name = name; myProfile.age = age; myProfile.location = location;
+      myProfile.name = name; myProfile.age = age;
+      const L = await saveMyLocation();
+      if(L.ok){ myProfile.location = L.label; }
+      else { alert('Your profile saved, but your location didn\'t. Give it another try in a moment.'); }
+      updateLocNudge();
+      if(typeof loadDiscoverFeed === 'function') loadDiscoverFeed();
+      if(typeof loadRequests === 'function') loadRequests();
       if(typeof renderMyProfile === 'function') renderMyProfile();
     }
     btn.disabled = false; btn.textContent = orig;
@@ -1179,14 +1242,205 @@
     document.querySelector('.scroll').scrollTop = 0;
   }));
 
+  // ===== LOCATION =====
+  // Offline backup list (~400 major cities) used when the live worldwide search can't be reached.
+  const FALLBACK_CITIES = [["Andorra","Andorra",42.5,1.52],["Dubai","United Arab Emirates",25.3,55.3],["Kabul","Afghanistan",34.52,69.2],["Antigua","Antigua & Barbuda",17.05,-61.8],["Anguilla","Anguilla",18.2,-63.07],["Tirane","Albania",41.33,19.83],["Yerevan","Armenia",40.18,44.5],["Luanda","Angola",-8.8,13.23],["McMurdo","Antarctica",-77.83,166.6],["Casey","Antarctica",-66.28,110.52],["Davis","Antarctica",-68.58,77.97],["DumontDUrville","Antarctica",-66.67,140.02],["Mawson","Antarctica",-67.6,62.88],["Palmer","Antarctica",-64.8,-64.1],["Rothera","Antarctica",-67.57,-68.13],["Syowa","Antarctica",-69.01,39.59],["Troll","Antarctica",-72.01,2.53],["Vostok","Antarctica",-78.4,106.9],["Buenos Aires","Argentina",-34.6,-58.45],["Cordoba","Argentina",-31.4,-64.18],["Salta","Argentina",-24.78,-65.42],["Jujuy","Argentina",-24.18,-65.3],["Tucuman","Argentina",-26.82,-65.22],["Catamarca","Argentina",-28.47,-65.78],["La Rioja","Argentina",-29.43,-66.85],["San Juan","Argentina",-31.53,-68.52],["Mendoza","Argentina",-32.88,-68.82],["San Luis","Argentina",-33.32,-66.35],["Rio Gallegos","Argentina",-51.63,-69.22],["Ushuaia","Argentina",-54.8,-68.3],["Pago Pago","American Samoa",-14.27,-170.7],["Vienna","Austria",48.22,16.33],["Lord Howe","Australia",-31.55,159.08],["Macquarie","Australia",-54.5,158.95],["Hobart","Australia",-42.88,147.32],["Melbourne","Australia",-37.82,144.97],["Sydney","Australia",-33.87,151.22],["Broken Hill","Australia",-31.95,141.45],["Brisbane","Australia",-27.47,153.03],["Lindeman","Australia",-20.27,149.0],["Adelaide","Australia",-34.92,138.58],["Darwin","Australia",-12.47,130.83],["Perth","Australia",-31.95,115.85],["Eucla","Australia",-31.72,128.87],["Aruba","Aruba",12.5,-69.97],["Mariehamn","Åland Islands",60.1,19.95],["Baku","Azerbaijan",40.38,49.85],["Sarajevo","Bosnia & Herzegovina",43.87,18.42],["Barbados","Barbados",13.1,-59.62],["Dhaka","Bangladesh",23.72,90.42],["Brussels","Belgium",50.83,4.33],["Ouagadougou","Burkina Faso",12.37,-1.52],["Sofia","Bulgaria",42.68,23.32],["Bahrain","Bahrain",26.38,50.58],["Bujumbura","Burundi",-3.38,29.37],["Porto-Novo","Benin",6.48,2.62],["St Barthelemy","St. Barthélemy",17.88,-62.85],["Bermuda","Bermuda",32.28,-64.77],["Brunei","Brunei",4.93,114.92],["La Paz","Bolivia",-16.5,-68.15],["Kralendijk","Caribbean Netherlands",12.15,-68.28],["Noronha","Brazil",-3.85,-32.42],["Belem","Brazil",-1.45,-48.48],["Fortaleza","Brazil",-3.72,-38.5],["Recife","Brazil",-8.05,-34.9],["Araguaina","Brazil",-7.2,-48.2],["Maceio","Brazil",-9.67,-35.72],["Bahia","Brazil",-12.98,-38.52],["Sao Paulo","Brazil",-23.53,-46.62],["Campo Grande","Brazil",-20.45,-54.62],["Cuiaba","Brazil",-15.58,-56.08],["Santarem","Brazil",-2.43,-54.87],["Porto Velho","Brazil",-8.77,-63.9],["Boa Vista","Brazil",2.82,-60.67],["Manaus","Brazil",-3.13,-60.02],["Eirunepe","Brazil",-6.67,-69.87],["Rio Branco","Brazil",-9.97,-67.8],["Nassau","Bahamas",25.08,-77.35],["Thimphu","Bhutan",27.47,89.65],["Gaborone","Botswana",-24.65,25.92],["Minsk","Belarus",53.9,27.57],["Belize","Belize",17.5,-88.2],["St Johns","Canada",47.57,-52.72],["Halifax","Canada",44.65,-63.6],["Glace Bay","Canada",46.2,-59.95],["Moncton","Canada",46.1,-64.78],["Goose Bay","Canada",53.33,-60.42],["Blanc-Sablon","Canada",51.42,-57.12],["Toronto","Canada",43.65,-79.38],["Iqaluit","Canada",63.73,-68.47],["Atikokan","Canada",48.76,-91.62],["Winnipeg","Canada",49.88,-97.15],["Resolute","Canada",74.7,-94.83],["Rankin Inlet","Canada",62.82,-92.08],["Regina","Canada",50.4,-104.65],["Swift Current","Canada",50.28,-107.83],["Edmonton","Canada",53.55,-113.47],["Cambridge Bay","Canada",69.11,-105.05],["Inuvik","Canada",68.35,-133.72],["Vancouver","Canada",49.27,-123.12],["Creston","Canada",49.1,-116.52],["Dawson Creek","Canada",55.77,-120.23],["Fort Nelson","Canada",58.8,-122.7],["Whitehorse","Canada",60.72,-135.05],["Dawson","Canada",64.07,-139.42],["Cocos","Cocos (Keeling) Islands",-12.17,96.92],["Kinshasa","Congo - Kinshasa",-4.3,15.3],["Lubumbashi","Congo - Kinshasa",-11.67,27.47],["Bangui","Central African Republic",4.37,18.58],["Brazzaville","Congo - Brazzaville",-4.27,15.28],["Zurich","Switzerland",47.38,8.53],["Abidjan","Côte d’Ivoire",5.32,-4.03],["Rarotonga","Cook Islands",-21.23,-159.77],["Santiago","Chile",-33.45,-70.67],["Coyhaique","Chile",-45.57,-72.07],["Punta Arenas","Chile",-53.15,-70.92],["Easter","Chile",-27.15,-109.43],["Douala","Cameroon",4.05,9.7],["Shanghai","China",31.23,121.47],["Urumqi","China",43.8,87.58],["Bogota","Colombia",4.6,-74.08],["Costa Rica","Costa Rica",9.93,-84.08],["Havana","Cuba",23.13,-82.37],["Cape Verde","Cape Verde",14.92,-23.52],["Curacao","Curaçao",12.18,-69.0],["Christmas","Christmas Island",-10.42,105.72],["Nicosia","Cyprus",35.17,33.37],["Famagusta","Cyprus",35.12,33.95],["Prague","Czechia",50.08,14.43],["Berlin","Germany",52.5,13.37],["Busingen","Germany",47.7,8.68],["Djibouti","Djibouti",11.6,43.15],["Copenhagen","Denmark",55.67,12.58],["Dominica","Dominica",15.3,-61.4],["Santo Domingo","Dominican Republic",18.47,-69.9],["Algiers","Algeria",36.78,3.05],["Guayaquil","Ecuador",-2.17,-79.83],["Galapagos","Ecuador",-0.9,-89.6],["Tallinn","Estonia",59.42,24.75],["Cairo","Egypt",30.05,31.25],["El Aaiun","Western Sahara",27.15,-13.2],["Asmara","Eritrea",15.33,38.88],["Madrid","Spain",40.4,-3.68],["Ceuta","Spain",35.88,-5.32],["Canary","Spain",28.1,-15.4],["Addis Ababa","Ethiopia",9.03,38.7],["Helsinki","Finland",60.17,24.97],["Fiji","Fiji",-18.13,178.42],["Stanley","Falkland Islands",-51.7,-57.85],["Chuuk","Micronesia",7.42,151.78],["Pohnpei","Micronesia",6.97,158.22],["Kosrae","Micronesia",5.32,162.98],["Faroe","Faroe Islands",62.02,-6.77],["Paris","France",48.87,2.33],["Libreville","Gabon",0.38,9.45],["London","United Kingdom",51.51,-0.13],["Grenada","Grenada",12.05,-61.75],["Tbilisi","Georgia",41.72,44.82],["Cayenne","French Guiana",4.93,-52.33],["Guernsey","Guernsey",49.45,-2.54],["Accra","Ghana",5.55,-0.22],["Gibraltar","Gibraltar",36.13,-5.35],["Nuuk","Greenland",64.18,-51.73],["Danmarkshavn","Greenland",76.77,-18.67],["Scoresbysund","Greenland",70.48,-21.97],["Thule","Greenland",76.57,-68.78],["Banjul","Gambia",13.47,-16.65],["Conakry","Guinea",9.52,-13.72],["Guadeloupe","Guadeloupe",16.23,-61.53],["Malabo","Equatorial Guinea",3.75,8.78],["Athens","Greece",37.97,23.72],["South Georgia","South Georgia & South Sandwich Islands",-54.27,-36.53],["Guatemala","Guatemala",14.63,-90.52],["Guam","Guam",13.47,144.75],["Bissau","Guinea-Bissau",11.85,-15.58],["Guyana","Guyana",6.8,-58.17],["Hong Kong","Hong Kong SAR China",22.28,114.15],["Tegucigalpa","Honduras",14.1,-87.22],["Zagreb","Croatia",45.8,15.97],["Port-au-Prince","Haiti",18.53,-72.33],["Budapest","Hungary",47.5,19.08],["Jakarta","Indonesia",-6.17,106.8],["Pontianak","Indonesia",-0.03,109.33],["Makassar","Indonesia",-5.12,119.4],["Jayapura","Indonesia",-2.53,140.7],["Dublin","Ireland",53.33,-6.25],["Jerusalem","Israel",31.78,35.22],["Isle of Man","Isle of Man",54.15,-4.47],["Kolkata","India",22.53,88.37],["Chagos","British Indian Ocean Territory",-7.33,72.42],["Baghdad","Iraq",33.35,44.42],["Tehran","Iran",35.67,51.43],["Reykjavik","Iceland",64.15,-21.85],["Rome","Italy",41.9,12.48],["Jersey","Jersey",49.18,-2.11],["Jamaica","Jamaica",17.97,-76.79],["Amman","Jordan",31.95,35.93],["Tokyo","Japan",35.65,139.74],["Nairobi","Kenya",-1.28,36.82],["Bishkek","Kyrgyzstan",42.9,74.6],["Phnom Penh","Cambodia",11.55,104.92],["Tarawa","Kiribati",1.42,173.0],["Kanton","Kiribati",-2.78,-171.72],["Kiritimati","Kiribati",1.87,-157.33],["Comoro","Comoros",-11.68,43.27],["St Kitts","St. Kitts & Nevis",17.3,-62.72],["Pyongyang","North Korea",39.02,125.75],["Seoul","South Korea",37.55,126.97],["Kuwait","Kuwait",29.33,47.98],["Cayman","Cayman Islands",19.3,-81.38],["Almaty","Kazakhstan",43.25,76.95],["Qyzylorda","Kazakhstan",44.8,65.47],["Qostanay","Kazakhstan",53.2,63.62],["Aqtobe","Kazakhstan",50.28,57.17],["Aqtau","Kazakhstan",44.52,50.27],["Atyrau","Kazakhstan",47.12,51.93],["Oral","Kazakhstan",51.22,51.35],["Vientiane","Laos",17.97,102.6],["Beirut","Lebanon",33.88,35.5],["St Lucia","St. Lucia",14.02,-61.0],["Vaduz","Liechtenstein",47.15,9.52],["Colombo","Sri Lanka",6.93,79.85],["Monrovia","Liberia",6.3,-10.78],["Maseru","Lesotho",-29.47,27.5],["Vilnius","Lithuania",54.68,25.32],["Luxembourg","Luxembourg",49.6,6.15],["Riga","Latvia",56.95,24.1],["Tripoli","Libya",32.9,13.18],["Casablanca","Morocco",33.65,-7.58],["Monaco","Monaco",43.7,7.38],["Chisinau","Moldova",47.0,28.83],["Podgorica","Montenegro",42.43,19.27],["Marigot","St. Martin",18.07,-63.08],["Antananarivo","Madagascar",-18.92,47.52],["Majuro","Marshall Islands",7.15,171.2],["Kwajalein","Marshall Islands",9.08,167.33],["Skopje","North Macedonia",41.98,21.43],["Bamako","Mali",12.65,-8.0],["Yangon","Myanmar (Burma)",16.78,96.17],["Ulaanbaatar","Mongolia",47.92,106.88],["Hovd","Mongolia",48.02,91.65],["Macau","Macao SAR China",22.2,113.54],["Saipan","Northern Mariana Islands",15.2,145.75],["Martinique","Martinique",14.6,-61.08],["Nouakchott","Mauritania",18.1,-15.95],["Montserrat","Montserrat",16.72,-62.22],["Malta","Malta",35.9,14.52],["Mauritius","Mauritius",-20.17,57.5],["Maldives","Maldives",4.17,73.5],["Blantyre","Malawi",-15.78,35.0],["Mexico City","Mexico",19.4,-99.15],["Cancun","Mexico",21.08,-86.77],["Merida","Mexico",20.97,-89.62],["Monterrey","Mexico",25.67,-100.32],["Matamoros","Mexico",25.83,-97.5],["Chihuahua","Mexico",28.63,-106.08],["Ciudad Juarez","Mexico",31.73,-106.48],["Ojinaga","Mexico",29.57,-104.42],["Mazatlan","Mexico",23.22,-106.42],["Bahia Banderas","Mexico",20.8,-105.25],["Hermosillo","Mexico",29.07,-110.97],["Tijuana","Mexico",32.53,-117.02],["Kuala Lumpur","Malaysia",3.17,101.7],["Kuching","Malaysia",1.55,110.33],["Maputo","Mozambique",-25.97,32.58],["Windhoek","Namibia",-22.57,17.1],["Noumea","New Caledonia",-22.27,166.45],["Niamey","Niger",13.52,2.12],["Norfolk","Norfolk Island",-29.05,167.97],["Lagos","Nigeria",6.45,3.4],["Managua","Nicaragua",12.15,-86.28],["Amsterdam","Netherlands",52.37,4.9],["Oslo","Norway",59.92,10.75],["Kathmandu","Nepal",27.72,85.32],["Nauru","Nauru",-0.52,166.92],["Niue","Niue",-19.02,-169.92],["Auckland","New Zealand",-36.87,174.77],["Chatham","New Zealand",-43.95,-176.55],["Muscat","Oman",23.6,58.58],["Panama","Panama",8.97,-79.53],["Lima","Peru",-12.05,-77.05],["Tahiti","French Polynesia",-17.53,-149.57],["Marquesas","French Polynesia",-9.0,-139.5],["Gambier","French Polynesia",-23.13,-134.95],["Port Moresby","Papua New Guinea",-9.5,147.17],["Bougainville","Papua New Guinea",-6.22,155.57],["Manila","Philippines",14.59,120.97],["Karachi","Pakistan",24.87,67.05],["Warsaw","Poland",52.25,21.0],["Miquelon","St. Pierre & Miquelon",47.05,-56.33],["Pitcairn","Pitcairn Islands",-25.07,-130.08],["Puerto Rico","Puerto Rico",18.47,-66.11],["Gaza","Palestinian Territories",31.5,34.47],["Hebron","Palestinian Territories",31.53,35.09],["Lisbon","Portugal",38.72,-9.13],["Madeira","Portugal",32.63,-16.9],["Azores","Portugal",37.73,-25.67],["Palau","Palau",7.33,134.48],["Asuncion","Paraguay",-25.27,-57.67],["Qatar","Qatar",25.28,51.53],["Reunion","Réunion",-20.87,55.47],["Bucharest","Romania",44.43,26.1],["Belgrade","Serbia",44.83,20.5],["Kaliningrad","Russia",54.72,20.5],["Moscow","Russia",55.76,37.62],["Simferopol","Ukraine",44.95,34.1],["Kirov","Russia",58.6,49.65],["Volgograd","Russia",48.73,44.42],["Astrakhan","Russia",46.35,48.05],["Saratov","Russia",51.57,46.03],["Ulyanovsk","Russia",54.33,48.4],["Samara","Russia",53.2,50.15],["Yekaterinburg","Russia",56.85,60.6],["Omsk","Russia",55.0,73.4],["Novosibirsk","Russia",55.03,82.92],["Barnaul","Russia",53.37,83.75],["Tomsk","Russia",56.5,84.97],["Novokuznetsk","Russia",53.75,87.12],["Krasnoyarsk","Russia",56.02,92.83],["Irkutsk","Russia",52.27,104.33],["Chita","Russia",52.05,113.47],["Yakutsk","Russia",62.0,129.67],["Khandyga","Russia",62.66,135.55],["Vladivostok","Russia",43.17,131.93],["Ust-Nera","Russia",64.56,143.23],["Magadan","Russia",59.57,150.8],["Sakhalin","Russia",46.97,142.7],["Srednekolymsk","Russia",67.47,153.72],["Kamchatka","Russia",53.02,158.65],["Anadyr","Russia",64.75,177.48],["Kigali","Rwanda",-1.95,30.07],["Riyadh","Saudi Arabia",24.63,46.72],["Guadalcanal","Solomon Islands",-9.53,160.2],["Mahe","Seychelles",-4.67,55.47],["Khartoum","Sudan",15.6,32.53],["Stockholm","Sweden",59.33,18.05],["Singapore","Singapore",1.28,103.85],["St Helena","St. Helena",-15.92,-5.7],["Ljubljana","Slovenia",46.05,14.52],["Longyearbyen","Svalbard & Jan Mayen",78.0,16.0],["Bratislava","Slovakia",48.15,17.12],["Freetown","Sierra Leone",8.5,-13.25],["San Marino","San Marino",43.92,12.47],["Dakar","Senegal",14.67,-17.43],["Mogadishu","Somalia",2.07,45.37],["Paramaribo","Suriname",5.83,-55.17],["Juba","South Sudan",4.85,31.62],["Sao Tome","São Tomé & Príncipe",0.33,6.73],["El Salvador","El Salvador",13.7,-89.2],["Lower Princes","Sint Maarten",18.05,-63.05],["Damascus","Syria",33.5,36.3],["Mbabane","Eswatini",-26.3,31.1],["Grand Turk","Turks & Caicos Islands",21.47,-71.13],["Ndjamena","Chad",12.12,15.05],["Kerguelen","French Southern Territories",-49.35,70.22],["Lome","Togo",6.13,1.22],["Bangkok","Thailand",13.75,100.52],["Dushanbe","Tajikistan",38.58,68.8],["Fakaofo","Tokelau",-9.37,-171.23],["Dili","Timor-Leste",-8.55,125.58],["Ashgabat","Turkmenistan",37.95,58.38],["Tunis","Tunisia",36.8,10.18],["Tongatapu","Tonga",-21.13,-175.2],["Istanbul","Türkiye",41.02,28.97],["Port of Spain","Trinidad & Tobago",10.65,-61.52],["Funafuti","Tuvalu",-8.52,179.22],["Taipei","Taiwan",25.05,121.5],["Dar es Salaam","Tanzania",-6.8,39.28],["Kyiv","Ukraine",50.43,30.52],["Kampala","Uganda",0.32,32.42],["Midway","U.S. Outlying Islands",28.22,-177.37],["Wake","U.S. Outlying Islands",19.28,166.62],["New York","United States",40.71,-74.01],["Detroit","United States",42.33,-83.05],["Louisville","United States",38.25,-85.76],["Monticello","United States",36.83,-84.85],["Indianapolis","United States",39.77,-86.16],["Vincennes","United States",38.68,-87.53],["Winamac","United States",41.05,-86.6],["Marengo","United States",38.38,-86.34],["Petersburg","United States",38.49,-87.28],["Vevay","United States",38.75,-85.07],["Chicago","United States",41.85,-87.65],["Tell City","United States",37.95,-86.76],["Knox","United States",41.3,-86.62],["Menominee","United States",45.11,-87.61],["Center","United States",47.12,-101.3],["New Salem","United States",46.84,-101.41],["Beulah","United States",47.26,-101.78],["Denver","United States",39.74,-104.98],["Boise","United States",43.61,-116.2],["Phoenix","United States",33.45,-112.07],["Los Angeles","United States",34.05,-118.24],["Anchorage","United States",61.22,-149.9],["Juneau","United States",58.3,-134.42],["Sitka","United States",57.18,-135.3],["Metlakatla","United States",55.13,-131.58],["Yakutat","United States",59.55,-139.73],["Nome","United States",64.5,-165.41],["Adak","United States",51.88,-176.66],["Honolulu","United States",21.31,-157.86],["Montevideo","Uruguay",-34.91,-56.21],["Samarkand","Uzbekistan",39.67,66.8],["Tashkent","Uzbekistan",41.33,69.3],["Vatican","Vatican City",41.9,12.45],["St Vincent","St. Vincent & Grenadines",13.15,-61.23],["Caracas","Venezuela",10.5,-66.93],["Tortola","British Virgin Islands",18.45,-64.62],["St Thomas","U.S. Virgin Islands",18.35,-64.93],["Ho Chi Minh","Vietnam",10.75,106.67],["Efate","Vanuatu",-17.67,168.42],["Wallis","Wallis & Futuna",-13.3,-176.17],["Apia","Samoa",-13.83,-171.73],["Aden","Yemen",12.75,45.2],["Mayotte","Mayotte",-12.78,45.23],["Johannesburg","South Africa",-26.25,28.0],["Lusaka","Zambia",-15.42,28.28],["Harare","Zimbabwe",-17.83,31.05]];
+  let myLoc = null;        // what's saved: { city, country, lat, lon, share }
+  let pendingLoc = null;   // what's chosen on screen right now
+  let distMap = {};        // other person's id -> approximate km
+  let distInflight = null;
+  const $id = i => document.getElementById(i);
+  const norm = s => (s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+
+  function fmtDist(km){
+    if(km == null) return '';
+    if(km <= 5) return 'Same city area';
+    return '~' + km.toLocaleString('en-US') + ' km away';
+  }
+  function distSuffix(id){ const k = distMap[id]; return k == null ? '' : ' · ' + fmtDist(k); }
+
+  function haversineKm(a,b,c,d){
+    const R=6371, r=x=>x*Math.PI/180;
+    const dLat=r(c-a), dLon=r(d-b);
+    const h=Math.sin(dLat/2)**2+Math.cos(r(a))*Math.cos(r(c))*Math.sin(dLon/2)**2;
+    return 2*R*Math.asin(Math.min(1,Math.sqrt(h)));
+  }
+
+  function locNoteText(){
+    return $id('loc-hide').checked
+      ? 'Your city and distance stay hidden. You also won’t see how far others are.'
+      : 'People see your city and an approximate distance (rounded), never your exact spot.';
+  }
+  function showSelected(){
+    const has = !!pendingLoc;
+    $id('loc-selected').style.display = has ? 'flex' : 'none';
+    $id('loc-search-wrap').style.display = has ? 'none' : 'block';
+    $id('loc-selected-label').textContent = has ? '📍 ' + pendingLoc.city + (pendingLoc.country ? ', ' + pendingLoc.country : '') : '';
+    $id('loc-note').textContent = locNoteText();
+  }
+  function selectLoc(o){
+    pendingLoc = { city:o.city, country:o.country||'', lat:+o.lat, lon:+o.lon };
+    $id('loc-results').innerHTML = '';
+    $id('loc-search').value = '';
+    const st = $id('loc-status'); st.style.display = 'none';
+    showSelected();
+  }
+  function locStatus(msg){ const st=$id('loc-status'); st.textContent = msg; st.style.display = msg ? 'block' : 'none'; }
+
+  function localMatches(q){
+    const s = norm(q);
+    const starts = [], has = [];
+    for(const c of FALLBACK_CITIES){
+      const n = norm(c[0]);
+      if(n.startsWith(s)) starts.push(c); else if(n.includes(s)) has.push(c);
+    }
+    return starts.concat(has).slice(0,6).map(c=>({ city:c[0], country:c[1], lat:c[2], lon:c[3], sub:'' }));
+  }
+
+  function renderLocResults(list, note){
+    const box = $id('loc-results');
+    box.innerHTML = '';
+    list.forEach(o=>{
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'loc-opt';
+      b.textContent = o.city;
+      const sm = document.createElement('small');
+      sm.textContent = [o.sub, o.country].filter(Boolean).join(', ');
+      b.appendChild(sm);
+      b.addEventListener('click', ()=> selectLoc(o));
+      box.appendChild(b);
+    });
+    if(!list.length && note){ box.innerHTML = '<p class="loc-note">' + note + '</p>'; }
+  }
+
+  let locSeq = 0, locTimer = null;
+  async function searchCities(q){
+    const seq = ++locSeq;
+    let res = [], live = false;
+    try{
+      const ctl = new AbortController();
+      const t = setTimeout(()=> ctl.abort(), 5000);
+      const r = await fetch('https://geocoding-api.open-meteo.com/v1/search?name=' + encodeURIComponent(q) + '&count=8&language=en&format=json', { signal: ctl.signal });
+      clearTimeout(t);
+      if(r.ok){
+        live = true;
+        const j = await r.json();
+        const seen = new Set();
+        (j.results || []).forEach(x=>{
+          const key = [x.name, x.admin1, x.country].join('|');
+          if(seen.has(key)) return; seen.add(key);
+          res.push({ city:x.name, country:x.country||'', lat:x.latitude, lon:x.longitude, sub:x.admin1||'' });
+        });
+      }
+    }catch(e){ /* fall back below */ }
+    if(seq !== locSeq) return;
+    if(!res.length) res = localMatches(q);
+    renderLocResults(res, live ? 'No city found — check the spelling.' : 'Couldn’t reach the city search. Try a bigger nearby city.');
+  }
+
+  $id('loc-search').addEventListener('input', e=>{
+    clearTimeout(locTimer);
+    const q = e.target.value.trim();
+    if(q.length < 2){ locSeq++; $id('loc-results').innerHTML = ''; return; }
+    locTimer = setTimeout(()=> searchCities(q), 250);
+  });
+  $id('loc-change').addEventListener('click', ()=>{
+    pendingLoc = null; showSelected(); $id('loc-search').focus();
+  });
+  $id('loc-hide').addEventListener('change', ()=>{ $id('loc-note').textContent = locNoteText(); });
+
+  $id('loc-gps').addEventListener('click', ()=>{
+    if(!navigator.geolocation){ locStatus('This browser can’t share a location — search for your city instead.'); return; }
+    locStatus('Finding you…');
+    navigator.geolocation.getCurrentPosition(async pos=>{
+      // snap to ~11 km so even before the city is picked, nothing precise is kept
+      const lat = Math.round(pos.coords.latitude*10)/10, lon = Math.round(pos.coords.longitude*10)/10;
+      let city = '', country = '';
+      try{
+        const ctl = new AbortController();
+        const t = setTimeout(()=> ctl.abort(), 5000);
+        const r = await fetch('https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=' + lat + '&longitude=' + lon + '&localityLanguage=en', { signal: ctl.signal });
+        clearTimeout(t);
+        if(r.ok){ const j = await r.json(); city = j.city || j.locality || ''; country = j.countryName || ''; }
+      }catch(e){}
+      if(!city){
+        let best = null, bd = 1e9;
+        FALLBACK_CITIES.forEach(c=>{ const d = haversineKm(lat, lon, c[2], c[3]); if(d < bd){ bd = d; best = c; } });
+        if(best){ city = (bd > 60 ? 'Near ' : '') + best[0]; country = best[1]; }
+      }
+      if(!city){ locStatus('Couldn’t work out your city — search for it instead.'); return; }
+      selectLoc({ city, country, lat, lon });
+    }, ()=>{
+      locStatus('Location permission was denied — search for your city instead.');
+    }, { timeout:10000, maximumAge:600000 });
+  });
+
+  async function loadMyLocation(){
+    myLoc = null;
+    if(myProfile){
+      try{
+        const { data } = await sb.from('profile_locations').select('*').eq('profile_id', myProfile.id).maybeSingle();
+        if(data) myLoc = { city:data.city, country:data.country, lat:data.lat, lon:data.lon, share:data.share };
+      }catch(e){}
+    }
+    pendingLoc = myLoc ? { city:myLoc.city, country:myLoc.country, lat:myLoc.lat, lon:myLoc.lon } : null;
+    $id('loc-hide').checked = !!(myLoc && !myLoc.share);
+    showSelected();
+    updateLocNudge();
+    if(typeof renderMyProfile === 'function') renderMyProfile();
+  }
+
+  async function saveMyLocation(){
+    const hide = $id('loc-hide').checked;
+    if(!pendingLoc){
+      if(myLoc){
+        const { error } = await sb.rpc('clear_my_location');
+        if(error){ console.error(error); return { ok:false }; }
+        myLoc = null;
+      }
+      return { ok:true, label:'' };
+    }
+    const { data, error } = await sb.rpc('set_my_location', {
+      p_city: pendingLoc.city, p_country: pendingLoc.country,
+      p_lat: pendingLoc.lat, p_lon: pendingLoc.lon, p_share: !hide
+    });
+    if(error){ console.error(error); return { ok:false }; }
+    myLoc = Object.assign({}, pendingLoc, { share: !hide });
+    return { ok:true, label: data || '' };
+  }
+
+  function ensureDistances(){
+    if(distInflight) return distInflight;
+    distInflight = (async ()=>{
+      distMap = {};
+      try{
+        const { data, error } = await sb.rpc('distances_from_me');
+        if(!error && data) data.forEach(r=>{ distMap[r.profile_id] = r.km; });
+      }catch(e){}
+      updateLocNudge();
+    })().finally(()=>{ distInflight = null; });
+    return distInflight;
+  }
+
+  function updateLocNudge(){
+    const sharing = !!(myLoc && myLoc.share);
+    const n = $id('loc-nudge');
+    if(n) n.style.display = sharing ? 'none' : 'block';
+    const fn = $id('f-dist-note');
+    if(fn) fn.textContent = sharing ? 'People who hide their location won’t show up when this is on.' : 'Share your city in Lock In to use distance.';
+  }
+  $id('loc-nudge').addEventListener('click', ()=> document.querySelector('.tab[data-t="onboarding"]').click());
+  // ===== end LOCATION =====
+
   // discover feed — loaded from Supabase, computed against your real profile
   let people = [];
-  let sortMode = 'ride';      // ride | obs | end | vibe | aura | new
+  let sortMode = 'ride';      // ride | near | obs | end | vibe | aura | new
   let currentFilter = null;   // set by Dial It In, survives tab switches
   function totalCommon(p){ return p.common.obsessions.length + p.common.endgame.length + p.common.vibe.length; }
 
   const SORTERS = {
     ride: (a,b)=> totalCommon(b) - totalCommon(a),
+    near: (a,b)=> (a.km == null ? 1e9 : a.km) - (b.km == null ? 1e9 : b.km),
     obs:  (a,b)=> b.common.obsessions.length - a.common.obsessions.length,
     end:  (a,b)=> b.common.endgame.length - a.common.endgame.length,
     vibe: (a,b)=> b.common.vibe.length - a.common.vibe.length,
@@ -1201,7 +1455,10 @@
 
   async function loadDiscoverFeed(){
     if(!myProfile) return;
-    const { data, error } = await sb.from('profiles').select('*').neq('id', myProfile.id);
+    const [{ data, error }] = await Promise.all([
+      sb.from('profiles').select('*').neq('id', myProfile.id),
+      ensureDistances()
+    ]);
     if(error || !data){ people = []; renderFeed(); return; }
     const overlap = (a,b)=> (a||[]).filter(x=> (b||[]).includes(x));
     people = data.map(row=>{
@@ -1213,7 +1470,7 @@
       const initials = (row.name||'??').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
       return {
         id: row.id, i: initials, n: `${row.name}${row.age? ', '+row.age : ''}`,
-        loc: row.location || 'Location not set', aura: row.aura || 0,
+        loc: row.location || 'Location not shared', km: distMap[row.id] == null ? null : distMap[row.id], ageNum: row.age || null, aura: row.aura || 0,
         vibeLine: (row.vibe||[]).slice(0,3).join(' · ') || 'No vibe set yet',
         obsessions: row.obsessions||[], endgame: row.endgame||[], vibe: row.vibe||[],
         avatar_url: row.avatar_url || null,
@@ -1272,7 +1529,7 @@
           <div class="p-card-top">
             <div>
               <div class="p-name">${esc(p.n)}</div>
-              <div class="p-meta">${esc(p.loc)}</div>
+              <div class="p-meta">${esc(p.loc)}${p.km != null ? ' \u00b7 ' + esc(fmtDist(p.km)) : ''}</div>
               ${p.bio ? `<div class="p-bio">${esc(p.bio)}</div>` : ''}
             </div>
             <div class="aura-badge"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.6L22 9.3l-5 4.9 1.2 7.1L12 17.8l-6.2 3.5L7 14.2 2 9.3l7.1-.7z"/></svg>${p.aura} Aura</div>
@@ -1336,12 +1593,13 @@
       .select('*, sender:profiles!buddy_requests_sender_id_fkey(*), receiver:profiles!buddy_requests_receiver_id_fkey(*)')
       .or(`sender_id.eq.${myProfile.id},receiver_id.eq.${myProfile.id}`);
     if(error || !rows){ render(); return; }
+    await ensureDistances();
 
     incoming = rows.filter(r=> r.status==='pending' && r.receiver_id===myProfile.id)
-      .map(r=> ({ reqId:r.id, id:r.sender.id, i:initialsOf(r.sender.name), n:nameLine(r.sender), sub:'Wants to link up' }));
+      .map(r=> ({ reqId:r.id, id:r.sender.id, i:initialsOf(r.sender.name), n:nameLine(r.sender), sub:'Wants to link up' + distSuffix(r.sender.id) }));
 
     sent = rows.filter(r=> r.status==='pending' && r.sender_id===myProfile.id)
-      .map(r=> ({ id:r.receiver.id, i:initialsOf(r.receiver.name), n:nameLine(r.receiver), sub:'Pending' }));
+      .map(r=> ({ id:r.receiver.id, i:initialsOf(r.receiver.name), n:nameLine(r.receiver), sub:'Pending' + distSuffix(r.receiver.id) }));
 
     const acceptedRows = rows.filter(r=> r.status==='accepted');
     const { data: myRatings } = await sb.from('ratings').select('ratee_id').eq('rater_id', myProfile.id);
@@ -1349,7 +1607,7 @@
 
     connected = acceptedRows.map(r=>{
       const other = r.sender_id===myProfile.id ? r.receiver : r.sender;
-      return { id:other.id, i:initialsOf(other.name), n:nameLine(other), sub:'Buddies', aura: other.aura||0, rated: ratedIds.has(other.id), socials:[] };
+      return { id:other.id, i:initialsOf(other.name), n:nameLine(other), sub:'Buddies' + distSuffix(other.id), aura: other.aura||0, rated: ratedIds.has(other.id), socials:[] };
     });
 
     render();
