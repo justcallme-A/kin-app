@@ -206,6 +206,24 @@
 
   .cat-n{ font-size:10px; color:var(--text-2); letter-spacing:.5px; margin-left:4px; font-weight:500; }
 
+  /* ---------- socials ---------- */
+  .soc-inputs{ display:flex; flex-direction:column; gap:8px; margin-top:12px; }
+  .soc-inputs:empty{ display:none; }
+  .soc-row{ background:var(--bg-2); border:1px solid var(--gold-line); border-radius:var(--r-m); padding:10px 12px; animation:socIn .22s ease; }
+  @keyframes socIn{ from{ opacity:0; transform:translateY(-6px) scale(.98); } to{ opacity:1; transform:none; } }
+  .soc-name{ font-size:11px; letter-spacing:1.1px; text-transform:uppercase; color:var(--gold); margin-bottom:6px; display:flex; justify-content:space-between; align-items:center; }
+  .soc-x{ background:none; border:0; color:var(--text-2); font-size:16px; line-height:1; cursor:pointer; padding:0 2px; }
+  .soc-field{ display:flex; align-items:center; background:var(--bg-3); border:1px solid var(--hair); border-radius:var(--r-s); padding:0 10px; }
+  .soc-field:focus-within{ border-color:var(--gold-line); }
+  .soc-pre,.soc-suf{ font-size:12px; color:var(--text-2); white-space:nowrap; }
+  .soc-in{ flex:1; min-width:0; background:none; border:0; outline:0; color:var(--text-0); font-family:var(--font-b); font-size:14px; padding:11px 2px; }
+  .soc-hint{ font-size:11px; color:var(--text-2); margin:6px 0 0; }
+  .soc-badges{ display:flex; flex-wrap:wrap; gap:6px; }
+  .soc-badge{ font-size:11px; color:var(--text-1); background:var(--bg-3); border:1px solid var(--hair); padding:4px 10px; border-radius:999px; }
+  .p-socials{ margin-top:12px; }
+  .p-socials .lock-note{ font-size:11px; color:var(--text-2); margin-top:7px; }
+  a.u-chip{ text-decoration:none; color:var(--gold); border-color:var(--gold-line); }
+
   /* ---------- location ---------- */
   .loc-selected{ display:flex; align-items:center; justify-content:space-between; gap:10px; background:var(--gold-soft); border:1px solid var(--gold-line); color:var(--gold); border-radius:var(--r-m); padding:11px 14px; font-size:13px; margin-top:4px; }
   .loc-x{ background:none; border:0; color:var(--text-1); font:inherit; font-size:12px; text-decoration:underline; cursor:pointer; padding:2px 4px; }
@@ -527,6 +545,17 @@
           <input class="field" id="bio-input" type="text" maxlength="50" placeholder="One line about you — up to 50 characters">
         </div>
 
+        <div class="panel reveal link-row" id="row-socials">
+          <div style="display:flex; align-items:center; justify-content:space-between;">
+            <div class="cat" style="margin:0;">My Socials</div>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span class="count" id="cnt-ob-soc">(0/20)</span>
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="var(--text-2)" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
+            </div>
+          </div>
+          <p class="soc-hint" style="margin-top:8px;">Pick where you're on. Only buddies get your usernames.</p>
+        </div>
+
         <button class="btn btn-gold btn-block" id="finish-ob" style="margin-top:8px;">Lock In</button>
       </section>
 
@@ -564,6 +593,17 @@
         <button class="btn btn-gold btn-block" id="done-traits" style="margin-top:6px;">Done</button>
       </section>
 
+
+      <!-- ================= PICKER SHEET: SOCIALS ================= -->
+      <section class="screen" id="sheet-socials">
+        <div class="back-link" data-back="onboarding"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg>Back</div>
+        <p class="eyebrow">My Socials <span class="count" id="cnt-soc">(0/20)</span></p>
+        <h1 class="hero" style="font-size:20px;">Where can your people find you?</h1>
+        <p class="lede">Tap a platform, then add your username. Everyone sees <i>which</i> platforms you're on. Your username only unlocks once they become your buddy.</p>
+        <input class="field" id="soc-search" placeholder="Search… e.g. instagram, telegram, github" style="margin-bottom:14px;">
+        <div id="soc-cats"></div>
+        <button class="btn btn-gold btn-block" id="done-socials" style="margin-top:6px;">Done</button>
+      </section>
 
       <!-- ================= DISCOVER ================= -->
       <section class="screen" id="discover">
@@ -658,6 +698,9 @@
           <div class="aura-badge" style="margin-bottom:10px;" id="mc-aura"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.6L22 9.3l-5 4.9 1.2 7.1L12 17.8l-6.2 3.5L7 14.2 2 9.3l7.1-.7z"/></svg>— Aura</div>
           <div class="bio" id="mc-bio">No bio yet — add one in Lock In.</div>
         </div>
+
+        <div class="section-h"><h3>Find Me On</h3></div>
+        <div id="mc-socials"></div>
 
         <div class="section-h"><h3>The Grind</h3></div>
         <div id="mc-grind"></div>
@@ -846,6 +889,7 @@
     document.getElementById('name-input').value = (myProfile && myProfile.name) || '';
     document.getElementById('age-input').value = (myProfile && myProfile.age) || '';
     if(typeof loadMyLocation === 'function') loadMyLocation();
+    if(typeof loadMySocials === 'function') loadMySocials();
     if(typeof loadDiscoverFeed === 'function') loadDiscoverFeed();
     if(typeof loadRequests === 'function') loadRequests();
     if(typeof loadDiscipline === 'function') loadDiscipline();
@@ -900,6 +944,7 @@
     document.getElementById('mc-name').textContent = myProfile.name + (myProfile.age ? `, ${myProfile.age}` : '');
     document.getElementById('mc-meta').textContent = (typeof myLoc !== 'undefined' && myLoc && !myLoc.share) ? 'Location hidden' : (myProfile.location || 'Location not set');
     document.getElementById('mc-bio').textContent = myProfile.bio || 'No bio yet — add one in Lock In.';
+    if(typeof renderMySocials === 'function') renderMySocials();
     const { count } = await sb.from('ratings').select('*', { count:'exact', head:true }).eq('ratee_id', myProfile.id);
     document.getElementById('mc-aura').innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.6L22 9.3l-5 4.9 1.2 7.1L12 17.8l-6.2 3.5L7 14.2 2 9.3l7.1-.7z"/></svg>${myProfile.aura||0} Aura · rated by ${count||0} buddies`;
 
@@ -4708,6 +4753,8 @@
       if(L.ok){ myProfile.location = L.label; }
       else { alert('Your profile saved, but your location didn\'t. Give it another try in a moment.'); }
       updateLocNudge();
+      const S = await saveMySocials();
+      if(!S.ok){ alert('Your profile saved, but your socials didn\'t. Give it another try in a moment.'); }
       if(typeof loadDiscoverFeed === 'function') loadDiscoverFeed();
       if(typeof loadRequests === 'function') loadRequests();
       if(typeof renderMyProfile === 'function') renderMyProfile();
@@ -4732,6 +4779,8 @@
   document.getElementById('row-interests').addEventListener('click', ()=> openSheet('sheet-interests'));
   document.getElementById('row-goals').addEventListener('click', ()=> openSheet('sheet-goals'));
   document.getElementById('row-traits').addEventListener('click', ()=> openSheet('sheet-traits'));
+  document.getElementById('row-socials').addEventListener('click', ()=> openSheet('sheet-socials'));
+  document.getElementById('done-socials').addEventListener('click', closeSheet);
   document.getElementById('done-interests').addEventListener('click', closeSheet);
   document.getElementById('done-goals').addEventListener('click', closeSheet);
   document.getElementById('done-traits').addEventListener('click', closeSheet);
@@ -4938,6 +4987,167 @@
   $id('loc-nudge').addEventListener('click', ()=> document.querySelector('.tab[data-t="onboarding"]').click());
   // ===== end LOCATION =====
 
+  // ===== SOCIALS =====
+  // [category, [[platform, link template ({} = the person's ID; empty = no link, just show the ID)], ...]]
+  const SOCIAL_CATS = [["Popular", [["Discord", ""], ["Email", ""], ["Facebook", "https://facebook.com/{}"], ["GitHub", "https://github.com/{}"], ["Instagram", "https://instagram.com/{}"], ["LinkedIn", "https://linkedin.com/in/{}"], ["Pinterest", "https://pinterest.com/{}"], ["Reddit", "https://reddit.com/user/{}"], ["Snapchat", "https://snapchat.com/add/{}"], ["Spotify", "https://open.spotify.com/user/{}"], ["Steam", "https://steamcommunity.com/id/{}"], ["Telegram", "https://t.me/{}"], ["Threads", "https://threads.net/@{}"], ["TikTok", "https://tiktok.com/@{}"], ["Twitch", "https://twitch.tv/{}"], ["Website", "https://{}"], ["WhatsApp", "https://wa.me/{}"], ["X (Twitter)", "https://x.com/{}"], ["YouTube", "https://youtube.com/@{}"]]], ["Creators & Links", [["About.me", "https://about.me/{}"], ["Beacons", "https://beacons.ai/{}"], ["Bio.link", "https://bio.link/{}"], ["Buy Me a Coffee", "https://buymeacoffee.com/{}"], ["Carrd", "https://{}.carrd.co"], ["Etsy Shop", "https://etsy.com/shop/{}"], ["Gumroad", "https://{}.gumroad.com"], ["Ko-fi", "https://ko-fi.com/{}"], ["Linktree", "https://linktr.ee/{}"], ["Patreon", "https://patreon.com/{}"]]], ["Gaming", [["Battle.net", ""], ["Call of Duty ID", ""], ["Chess.com", "https://chess.com/member/{}"], ["Clash Royale Tag", ""], ["EA Account", ""], ["Epic Games", ""], ["Fortnite Username", ""], ["Game Jolt", "https://gamejolt.com/@{}"], ["itch.io", "https://{}.itch.io"], ["Lichess", "https://lichess.org/@/{}"], ["Minecraft Username", ""], ["Nintendo Friend Code", ""], ["PlayStation Network", "https://psnprofiles.com/{}"], ["Riot ID", ""], ["Roblox", "https://roblox.com/users/{}/profile"], ["Speedrun.com", "https://speedrun.com/users/{}"], ["Xbox Gamertag", "https://xbox.com/play/user/{}"]]], ["Messaging", [["Bale", "https://ble.ir/{}"], ["Botim", ""], ["Element (Matrix)", "https://matrix.to/#/{}"], ["Gap Messenger", "https://gap.im/{}"], ["iGap", ""], ["IMO", ""], ["KakaoTalk", ""], ["LINE", "https://line.me/ti/p/~{}"], ["Phone Number", ""], ["Rubika", "https://rubika.ir/{}"], ["Session", ""], ["Signal", ""], ["Slack", ""], ["Soroush", ""], ["Threema", ""], ["Viber", ""], ["WeChat", ""], ["Zalo", "https://zalo.me/{}"]]], ["Music & Audio", [["Anghami", ""], ["Apple Music", ""], ["Audiomack", "https://audiomack.com/{}"], ["Bandcamp", "https://{}.bandcamp.com"], ["Beatport", ""], ["Boomplay", ""], ["Deezer", "https://deezer.com/profile/{}"], ["Genius", "https://genius.com/{}"], ["Last.fm", "https://last.fm/user/{}"], ["Mixcloud", "https://mixcloud.com/{}"], ["ReverbNation", "https://reverbnation.com/{}"], ["Smule", "https://smule.com/{}"], ["SoundCloud", "https://soundcloud.com/{}"], ["Tidal", ""], ["YouTube Music", ""]]], ["Photo & Art", [["500px", "https://500px.com/p/{}"], ["ArtStation", "https://artstation.com/{}"], ["Behance", "https://behance.net/{}"], ["Cara", "https://cara.app/{}"], ["DeviantArt", "https://deviantart.com/{}"], ["Dribbble", "https://dribbble.com/{}"], ["Flickr", "https://flickr.com/people/{}"], ["Pixiv", "https://pixiv.net/en/users/{}"], ["Savee", "https://savee.it/{}"], ["Unsplash", "https://unsplash.com/@{}"], ["VSCO", "https://vsco.co/{}"]]], ["Professional & Freelance", [["Academia.edu", ""], ["Cal.com", "https://cal.com/{}"], ["Calendly", "https://calendly.com/{}"], ["Fiverr", "https://fiverr.com/{}"], ["Freelancer", "https://freelancer.com/u/{}"], ["Google Scholar", ""], ["ORCID", "https://orcid.org/{}"], ["ResearchGate", "https://researchgate.net/profile/{}"], ["Upwork", "https://upwork.com/freelancers/{}"], ["Wellfound", "https://wellfound.com/u/{}"], ["Wikipedia", "https://en.wikipedia.org/wiki/User:{}"], ["Xing", "https://xing.com/profile/{}"]]], ["Regional Favorites", [["Bilibili", "https://space.bilibili.com/{}"], ["Douyin", "https://douyin.com/user/{}"], ["Eitaa", "https://eitaa.com/{}"], ["KakaoStory", "https://story.kakao.com/{}"], ["Kuaishou", "https://kuaishou.com/profile/{}"], ["Kwai", ""], ["OK.ru", "https://ok.ru/profile/{}"], ["QQ", ""], ["Qzone", ""], ["VK", "https://vk.com/{}"], ["Weibo", "https://weibo.com/{}"], ["Xiaohongshu (RED)", "https://xiaohongshu.com/user/profile/{}"]]], ["Social Networks", [["BeReal", ""], ["Bluesky", "https://bsky.app/profile/{}"], ["Clubhouse", "https://clubhouse.com/@{}"], ["Ello", "https://ello.co/{}"], ["Farcaster", "https://warpcast.com/{}"], ["Gab", "https://gab.com/{}"], ["Hive", "https://hive.blog/@{}"], ["Lemon8", ""], ["Mastodon", ""], ["MeWe", "https://mewe.com/i/{}"], ["Minds", "https://minds.com/{}"], ["Nextdoor", ""], ["Nostr", "https://njump.me/{}"], ["Plurk", "https://plurk.com/{}"], ["Quora", "https://quora.com/profile/{}"], ["ShareChat", "https://sharechat.com/profile/{}"], ["Truth Social", "https://truthsocial.com/@{}"], ["Tumblr", "https://{}.tumblr.com"], ["Vero", "https://vero.co/{}"], ["Yubo", ""]]], ["Sports & Health", [["AllTrails", "https://alltrails.com/members/{}"], ["Duolingo", "https://duolingo.com/profile/{}"], ["Fitbit", ""], ["Garmin Connect", ""], ["Hevy", ""], ["Komoot", "https://komoot.com/user/{}"], ["MyFitnessPal", "https://myfitnesspal.com/profile/{}"], ["Strava", "https://strava.com/athletes/{}"], ["Untappd", "https://untappd.com/user/{}"]]], ["Tech & Dev", [["Bitbucket", "https://bitbucket.org/{}"], ["CodeChef", "https://codechef.com/users/{}"], ["Codeforces", "https://codeforces.com/profile/{}"], ["CodePen", "https://codepen.io/{}"], ["Dev.to", "https://dev.to/{}"], ["Figma", "https://figma.com/@{}"], ["GitLab", "https://gitlab.com/{}"], ["Hacker News", "https://news.ycombinator.com/user?id={}"], ["HackerRank", "https://hackerrank.com/profile/{}"], ["Hashnode", "https://hashnode.com/@{}"], ["Hugging Face", "https://huggingface.co/{}"], ["Indie Hackers", "https://indiehackers.com/{}"], ["Kaggle", "https://kaggle.com/{}"], ["Keybase", "https://keybase.io/{}"], ["LeetCode", "https://leetcode.com/u/{}"], ["Product Hunt", "https://producthunt.com/@{}"], ["Replit", "https://replit.com/@{}"], ["Stack Overflow", "https://stackoverflow.com/users/{}"]]], ["Video & Streaming", [["Aparat", "https://aparat.com/{}"], ["Dailymotion", "https://dailymotion.com/{}"], ["DLive", "https://dlive.tv/{}"], ["Kick", "https://kick.com/{}"], ["Likee", "https://likee.video/@{}"], ["Niconico", "https://nicovideo.jp/user/{}"], ["Odysee", "https://odysee.com/@{}"], ["Rumble", "https://rumble.com/user/{}"], ["Triller", "https://triller.co/@{}"], ["Trovo", "https://trovo.live/s/{}"], ["Vimeo", "https://vimeo.com/{}"]]], ["Watch, Read & Review", [["AniList", "https://anilist.co/user/{}"], ["Couchsurfing", "https://couchsurfing.com/people/{}"], ["Goodreads", "https://goodreads.com/user/show/{}"], ["IMDb", ""], ["Kitsu", "https://kitsu.io/users/{}"], ["Letterboxd", "https://letterboxd.com/{}"], ["MyAnimeList", "https://myanimelist.net/profile/{}"], ["StoryGraph", "https://app.thestorygraph.com/profile/{}"], ["Trakt", "https://trakt.tv/users/{}"]]], ["Web3 & Crypto", [["ENS Name", ""], ["Lens", "https://hey.xyz/u/{}"], ["OpenSea", "https://opensea.io/{}"], ["Wallet Nickname", ""]]], ["Writing & Blogs", [["Archive of Our Own", "https://archiveofourown.org/users/{}"], ["Beehiiv", ""], ["Blogger", "https://{}.blogspot.com"], ["Fanfiction.net", "https://fanfiction.net/~{}"], ["Ghost", ""], ["LiveJournal", "https://{}.livejournal.com"], ["Medium", "https://medium.com/@{}"], ["Mirror", "https://mirror.xyz/{}"], ["Naver Blog", "https://blog.naver.com/{}"], ["Substack", "https://{}.substack.com"], ["Wattpad", "https://wattpad.com/user/{}"], ["WordPress", "https://{}.wordpress.com"]]]];
+  const SOCIAL_BY_NAME = {};
+  SOCIAL_CATS.forEach(([c, rows])=> rows.forEach(([n, t])=>{ SOCIAL_BY_NAME[n] = { tpl: t, cat: c }; }));
+  const SOCIAL_MAX = 20;
+  let mySocials = {};   // platform -> username/ID typed by me
+
+  function socialHandle(name, raw){
+    let h = String(raw == null ? '' : raw).trim();
+    if(!h) return '';
+    if(/^https?:\/\//i.test(h)){
+      h = h.replace(/^http:\/\//i, 'https://');
+      return /^https:\/\/\S+$/.test(h) ? h.slice(0, 120) : '';
+    }
+    if(name === 'WhatsApp') return h.replace(/\D/g, '').slice(0, 20);
+    const tpl = (SOCIAL_BY_NAME[name] || {}).tpl || '';
+    if(tpl) h = h.replace(/\s+/g, '');
+    h = h.replace(/^@+/, '').replace(/\/+$/, '');
+    return h.slice(0, 120);
+  }
+  // only ever returns an https link built from the catalog template (or a validated https URL)
+  function socialLink(name, handle){
+    if(!handle) return null;
+    if(/^https:\/\/\S+$/.test(handle)) return handle;
+    const tpl = (SOCIAL_BY_NAME[name] || {}).tpl;
+    if(!tpl) return null;
+    return tpl.replace('{}', name === 'Website' ? encodeURI(handle) : encodeURIComponent(handle));
+  }
+  const showHandle = h => String(h).replace(/^https:\/\//, '');
+
+  function buildSocialsPicker(){
+    const box = document.getElementById('soc-cats');
+    box.innerHTML = SOCIAL_CATS.map(([cat, rows])=>`
+      <div class="panel reveal pk-cat" style="margin-bottom:10px;">
+        <div class="cat">${esc(cat)} <span class="cat-n">${rows.length}</span></div>
+        <div class="chipset">${rows.map(([n])=>`<span class="chip pick" data-soc="${esc(n)}" data-txt="${esc(n.toLowerCase())}">${esc(n)}</span>`).join('')}</div>
+        <div class="soc-inputs"></div>
+      </div>`).join('');
+  }
+
+  function socCount(){
+    const n = Object.keys(mySocials).length;
+    ['cnt-soc','cnt-ob-soc'].forEach(id=>{ const e = document.getElementById(id); if(e) e.textContent = `(${n}/${SOCIAL_MAX})`; });
+  }
+  function chipFor(name){
+    return [...document.querySelectorAll('#soc-cats .chip.pick')].find(c=> c.dataset.soc === name);
+  }
+  function addSocRow(name, focus){
+    const chip = chipFor(name); if(!chip) return;
+    const holder = chip.closest('.pk-cat').querySelector('.soc-inputs');
+    if([...holder.children].some(r=> r.dataset.soc === name)) return;
+    const tpl = (SOCIAL_BY_NAME[name] || {}).tpl || '';
+    const [pre, suf] = tpl ? tpl.replace(/^https:\/\//, '').split('{}') : ['', ''];
+    const row = document.createElement('div');
+    row.className = 'soc-row'; row.dataset.soc = name;
+    const head = document.createElement('div'); head.className = 'soc-name';
+    const t = document.createElement('span'); t.textContent = name;
+    const x = document.createElement('button'); x.type = 'button'; x.className = 'soc-x'; x.textContent = '×'; x.setAttribute('aria-label', 'Remove ' + name);
+    head.append(t, x);
+    const field = document.createElement('div'); field.className = 'soc-field';
+    const p1 = document.createElement('span'); p1.className = 'soc-pre'; p1.textContent = pre || '';
+    const input = document.createElement('input'); input.className = 'soc-in'; input.type = 'text'; input.maxLength = 120;
+    input.placeholder = tpl ? 'your ID' : 'your ID or username';
+    input.autocapitalize = 'off'; input.autocomplete = 'off'; input.spellcheck = false;
+    input.value = mySocials[name] || '';
+    const p2 = document.createElement('span'); p2.className = 'soc-suf'; p2.textContent = suf || '';
+    field.append(p1, input, p2);
+    row.append(head, field);
+    if(!tpl){ const n = document.createElement('p'); n.className = 'soc-hint'; n.textContent = 'No link for this one — buddies will see it as text.'; row.append(n); }
+    input.addEventListener('input', ()=>{ mySocials[name] = input.value; });
+    x.addEventListener('click', ()=> toggleSocial(name, false));
+    holder.appendChild(row);
+    if(focus){ try{ input.focus({ preventScroll:true }); row.scrollIntoView({ block:'nearest', behavior:'smooth' }); }catch(e){} }
+  }
+  function removeSocRow(name){
+    document.querySelectorAll('#soc-cats .soc-row').forEach(r=>{ if(r.dataset.soc === name) r.remove(); });
+  }
+  function toggleSocial(name, on){
+    const chip = chipFor(name);
+    if(on){
+      if(Object.keys(mySocials).length >= SOCIAL_MAX) return;
+      if(mySocials[name] === undefined) mySocials[name] = '';
+      if(chip) chip.classList.add('on');
+      addSocRow(name, true);
+    } else {
+      delete mySocials[name];
+      if(chip) chip.classList.remove('on');
+      removeSocRow(name);
+    }
+    socCount();
+  }
+  function syncSocialsUI(){
+    document.querySelectorAll('#soc-cats .chip.pick.on').forEach(c=> c.classList.remove('on'));
+    document.querySelectorAll('#soc-cats .soc-row').forEach(r=> r.remove());
+    Object.keys(mySocials).forEach(name=>{
+      const c = chipFor(name); if(c) c.classList.add('on');
+      addSocRow(name, false);
+    });
+    socCount();
+  }
+
+  async function loadMySocials(){
+    mySocials = {};
+    if(myProfile){
+      try{
+        const { data } = await sb.from('profile_socials').select('platform, handle').eq('profile_id', myProfile.id);
+        (data || []).forEach(r=>{ if(SOCIAL_BY_NAME[r.platform]) mySocials[r.platform] = r.handle; });
+      }catch(e){}
+    }
+    syncSocialsUI();
+    renderMySocials();
+  }
+
+  async function saveMySocials(){
+    const items = Object.entries(mySocials)
+      .map(([platform, raw])=>({ platform, handle: socialHandle(platform, raw) }))
+      .filter(x=> x.handle);
+    const { data, error } = await sb.rpc('set_my_socials', { p_items: items });
+    if(error){ console.error(error); return { ok:false }; }
+    mySocials = {};
+    items.forEach(x=>{ mySocials[x.platform] = x.handle; });
+    if(myProfile) myProfile.socials = data || items.map(x=>x.platform);
+    syncSocialsUI();
+    renderMySocials();
+    return { ok:true };
+  }
+
+  function renderMySocials(){
+    const box = document.getElementById('mc-socials');
+    if(!box || !myProfile) return;
+    const list = myProfile.socials || [];
+    box.innerHTML = list.length
+      ? `<div class="soc-badges">${list.map(n=>`<span class="soc-badge">${esc(n)}</span>`).join('')}</div><p class="soc-hint">This is what everyone sees. Your usernames unlock only for buddies.</p>`
+      : '<p class="empty">No socials added yet — add them in Lock In.</p>';
+  }
+
+  function socialsBadgesHtml(list){
+    if(!list || !list.length) return '';
+    const shown = list.slice(0, 6), more = list.length - shown.length;
+    return `<div class="p-socials"><div class="soc-badges">${shown.map(n=>`<span class="soc-badge">${esc(n)}</span>`).join('')}${more>0?`<span class="soc-badge">+${more}</span>`:''}</div><div class="lock-note">🔒 Link up to unlock their usernames</div></div>`;
+  }
+  function unlockedChipHtml(s){
+    const link = socialLink(s.platform, s.handle);
+    const label = `${esc(s.platform)} · ${esc(showHandle(s.handle))}`;
+    return link
+      ? `<a class="u-chip" href="${esc(link)}" target="_blank" rel="noopener noreferrer nofollow">${label}</a>`
+      : `<span class="u-chip">${label}</span>`;
+  }
+
+  buildSocialsPicker();
+  if(typeof mountReveals === 'function') mountReveals();
+  document.getElementById('soc-cats').addEventListener('click', e=>{
+    const c = e.target.closest('.chip.pick');
+    if(!c || !c.dataset.soc) return;
+    toggleSocial(c.dataset.soc, !c.classList.contains('on'));
+  });
+  wireSearch('soc-search', 'soc-cats');
+  socCount();
+  // ===== end SOCIALS =====
+
   // discover feed — loaded from Supabase, computed against your real profile
   let people = [];
   let sortMode = 'ride';      // ride | near | obs | end | vibe | aura | new
@@ -4980,6 +5190,7 @@
         vibeLine: (row.vibe||[]).slice(0,3).join(' · ') || 'No vibe set yet',
         obsessions: row.obsessions||[], endgame: row.endgame||[], vibe: row.vibe||[],
         avatar_url: row.avatar_url || null,
+        socials: row.socials || [],
         bio: row.bio || '',
         createdAt: Date.parse(row.created_at) || 0,
         common
@@ -5040,6 +5251,7 @@
             </div>
             <div class="aura-badge"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.6L22 9.3l-5 4.9 1.2 7.1L12 17.8l-6.2 3.5L7 14.2 2 9.3l7.1-.7z"/></svg>${p.aura} Aura</div>
           </div>
+          ${socialsBadgesHtml(p.socials)}
           <div class="chipset" style="margin-top:10px;">${p.common.obsessions.map(t=>`<span class="chip">${esc(t)}</span>`).join('')}</div>
           <div class="p-vibe"><b>Vibe —</b> ${esc(p.vibeLine)}</div>
           <button class="btn btn-gold btn-block send">Send Buddy Request</button>
@@ -5111,9 +5323,17 @@
     const { data: myRatings } = await sb.from('ratings').select('ratee_id').eq('rater_id', myProfile.id);
     const ratedIds = new Set((myRatings||[]).map(r=>r.ratee_id));
 
+    let socMap = {};
+    if(acceptedRows.length){
+      const ids = acceptedRows.map(r=> r.sender_id===myProfile.id ? r.receiver_id : r.sender_id);
+      try{
+        const { data: socRows } = await sb.from('profile_socials').select('profile_id, platform, handle').in('profile_id', ids);
+        (socRows || []).forEach(s=>{ (socMap[s.profile_id] = socMap[s.profile_id] || []).push(s); });
+      }catch(e){}
+    }
     connected = acceptedRows.map(r=>{
       const other = r.sender_id===myProfile.id ? r.receiver : r.sender;
-      return { id:other.id, i:initialsOf(other.name), n:nameLine(other), sub:'Buddies' + distSuffix(other.id), aura: other.aura||0, rated: ratedIds.has(other.id), socials:[] };
+      return { id:other.id, i:initialsOf(other.name), n:nameLine(other), sub:'Buddies' + distSuffix(other.id), aura: other.aura||0, rated: ratedIds.has(other.id), socials: (socMap[other.id] || []).sort((a,b)=> a.platform.localeCompare(b.platform)) };
     });
 
     render();
@@ -5145,7 +5365,7 @@
       <div style="flex:1;">
         <div class="r-name">${esc(p.n)}</div><div class="r-sub">${p.sub}</div>
         <div class="aura-badge" style="margin-top:6px;"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.6L22 9.3l-5 4.9 1.2 7.1L12 17.8l-6.2 3.5L7 14.2 2 9.3l7.1-.7z"/></svg>${p.aura} Aura</div>
-        <div class="unlocked">${p.socials.map(s=>`<span class="u-chip">${ic(s.k)} ${esc(s.l)}</span>`).join('')}</div>
+        <div class="unlocked">${p.socials.length ? p.socials.map(unlockedChipHtml).join('') : '<span class="r-sub">No socials shared yet</span>'}</div>
         <div class="stars ${p.rated?'rated':''}" data-idx="${idx}" style="margin-top:8px;">
           ${[1,2,3,4,5].map(n=>`<svg data-star="${n}" class="${p.rated && n<=p.givenRating ? 'on':''}" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.6L22 9.3l-5 4.9 1.2 7.1L12 17.8l-6.2 3.5L7 14.2 2 9.3l7.1-.7z"/></svg>`).join('')}
         </div>
